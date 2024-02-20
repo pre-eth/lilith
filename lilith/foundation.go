@@ -35,12 +35,12 @@ const(
 )
 
 // For computing the indices needed by the combiner for dynamic folding
-func DynamicIdx(arr []uint, idx uint, mod uint) uint {
+func dynamicIdx(arr []uint, idx uint, mod uint) uint {
 	return (arr[idx] + arr[idx + 1]) & mod
 }
 
 // Bitwise rotate left a 32-bit unsigned integer
-func Rotate(x uint32, shift uint8) uint32 {
+func rotate(x uint32, shift uint8) uint32 {
 	return (x << shift) | ((x >> (32 - shift)) & (1<<shift - 1))
 }
 
@@ -48,7 +48,7 @@ func Rotate(x uint32, shift uint8) uint32 {
 // 
 // This is an old trick to exchange the values of the variables a and b without using 
 // extra space for a temporary variable.
-func Swap(arr []uint, a uint, b uint) {
+func swap(arr []uint, a uint, b uint) {
 	arr[b] ^= arr[a] ^ arr[b]
 	arr[a] ^= arr[b]
 }

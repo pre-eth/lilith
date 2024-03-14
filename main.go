@@ -1,26 +1,26 @@
 package main
 
 import (
-	"time"
+	"bytes"
 	"crypto/rand"
-    "bytes"
-    "encoding/binary"
+	"encoding/binary"
+
 	"github.com/pre-eth/lilith/lilith"
 )
 
 func main() {
-	bytebuf := make([]byte, 32)
-	rand.Read(bytebuf[0:31])
+	bytebuf := make([]byte, 28)
+	rand.Read(bytebuf[0:16])
 
 	seed := make([]uint16, 8)
 	rbuf := bytes.NewReader(bytebuf[0:16])
-    binary.Read(rbuf, binary.LittleEndian, &seed)
+	binary.Read(rbuf, binary.LittleEndian, &seed)
 
-	nonce, _ := binary.Uvarint(bytebuf[16:24])
+	nonce := make([]uint32, 3)
+	rbuf = bytes.NewReader(bytebuf[16:28])
+	binary.Read(rbuf, binary.LittleEndian, &nonce)
 
-	salt, _ := binary.Uvarint(bytebuf[24:32])
-	currTime := time.Now().Unix()
-	salt ^= uint64(currTime) << (currTime & 31)
+	ciphertext := make([]byte, 0)
 
-	lilith.Lilith(seed, nonce, salt)
+	lilith.Lilith(ciphertext, seed, nonce)
 }

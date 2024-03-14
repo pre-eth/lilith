@@ -4,11 +4,24 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/binary"
+	"fmt"
+	"os"
 
 	"github.com/pre-eth/lilith/lilith"
 )
 
 func main() {
+	argc := len(os.Args)
+	if argc == 0 {
+		fmt.Println("No file provided. Exiting.")
+		os.Exit(0)
+	}
+
+	file, err := os.ReadFile(os.Args[1])
+	if err != nil {
+		panic(err)
+	}
+
 	bytebuf := make([]byte, 28)
 	rand.Read(bytebuf[0:16])
 
@@ -20,7 +33,5 @@ func main() {
 	rbuf = bytes.NewReader(bytebuf[16:28])
 	binary.Read(rbuf, binary.LittleEndian, &nonce)
 
-	ciphertext := make([]byte, 0)
-
-	lilith.Lilith(ciphertext, seed, nonce)
+	lilith.Lilith(file, seed, nonce)
 }

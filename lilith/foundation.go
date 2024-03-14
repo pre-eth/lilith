@@ -1,10 +1,13 @@
 package lilith
 
+import "encoding/binary"
+
 const (
 	U32_MAX = 1 << 32
 
 	// Following constants are used in the counter system to obtain the next counter
 	// for use with the next_state()
+
 	A0 = 0x4D34D34D
 	A1 = 0xD34D34D3
 	A2 = 0x34D34D34
@@ -15,8 +18,16 @@ const (
 	A7 = 0xD34D34D3
 )
 
+func bytesToU32(src []byte) []uint32 {
+	out := make([]uint32, len(src)/4)
+	for i := range out {
+		out[i] = binary.LittleEndian.Uint32(src[i*4:])
+	}
+	return out
+}
+
 // For computing the indices needed by the combiner for dynamic folding
-func dynamicIdx(arr []uint, idx uint, mod uint) uint {
+func dynamicIdx(arr []uint16, idx uint, mod uint16) uint16 {
 	return (arr[idx] + arr[idx+1]) & mod
 }
 
@@ -31,7 +42,7 @@ Courtesy of: https://graphics.stanford.edu/~seander/bithacks.html#SwappingValues
 This is an old trick to exchange the values of the variables a and b without using
 extra space for a temporary variable.
 */
-func swap(arr []uint, a uint, b uint) {
+func swap(arr []byte, a uint, b uint) {
 	arr[b] ^= arr[a] ^ arr[b]
 	arr[a] ^= arr[b]
 }

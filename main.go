@@ -6,14 +6,37 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/pre-eth/lilith/lilith"
 )
 
+const (
+	ERR_COLOR = "\033[1;38;2;255;17;0m"
+)
+
+func delayedPrint(text string, style string, delay_time float32) {
+	delay := 0
+	for delay < 0 {
+		delay = int(delay_time)
+		delay_time *= 10.0
+	}
+
+	text_length := len(text)
+	i := 0
+	fmt.Print(style)
+	for i < text_length {
+		time.Sleep(time.Duration(delay_time) * time.Millisecond)
+		fmt.Print(string(text[i]))
+		i += 1
+	}
+	fmt.Print("\033[m\n")
+}
+
 func main() {
 	argc := len(os.Args)
-	if argc == 0 {
-		fmt.Println("No file provided. Exiting.")
+	if argc == 1 {
+		delayedPrint("No file provided. Exiting.", ERR_COLOR, 50)
 		os.Exit(0)
 	}
 

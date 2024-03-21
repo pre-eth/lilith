@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"unicode/utf8"
 
 	"github.com/pre-eth/lilith/lilith"
 )
@@ -28,8 +29,8 @@ func delayedPrint(text string, style string, delay_time float32) {
 	fmt.Print(style)
 	for i < text_length {
 		time.Sleep(time.Duration(delay_time) * time.Millisecond)
-		char = string(text[i])
-		fmt.Print(char)
+		runeValue, w := utf8.DecodeRuneInString(text[i:])
+		fmt.Printf("%c", runeValue)
 		if char == "." && i != text_length-1 {
 			j := 0
 			for j < 2 {
@@ -38,7 +39,7 @@ func delayedPrint(text string, style string, delay_time float32) {
 				j += 1
 			}
 		}
-		i += 1
+		i += w
 	}
 	fmt.Print("\033[m\n")
 }
@@ -46,7 +47,7 @@ func delayedPrint(text string, style string, delay_time float32) {
 func main() {
 	argc := len(os.Args)
 	if argc == 1 {
-		delayedPrint("No file provided. Exiting.", ERR_COLOR, 27)
+		delayedPrint("❌ No file provided. Exiting.", ERR_COLOR, 27)
 		os.Exit(0)
 	}
 

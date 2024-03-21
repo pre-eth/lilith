@@ -24,10 +24,20 @@ func delayedPrint(text string, style string, delay_time float32) {
 
 	text_length := len(text)
 	i := 0
+	char := ""
 	fmt.Print(style)
 	for i < text_length {
 		time.Sleep(time.Duration(delay_time) * time.Millisecond)
-		fmt.Print(string(text[i]))
+		char = string(text[i])
+		fmt.Print(char)
+		if char == "." && i != text_length-1 {
+			j := 0
+			for j < 2 {
+				fmt.Print(" \033[1D.")
+				time.Sleep(time.Duration(50) * time.Millisecond)
+				j += 1
+			}
+		}
 		i += 1
 	}
 	fmt.Print("\033[m\n")
@@ -36,7 +46,7 @@ func delayedPrint(text string, style string, delay_time float32) {
 func main() {
 	argc := len(os.Args)
 	if argc == 1 {
-		delayedPrint("No file provided. Exiting.", ERR_COLOR, 50)
+		delayedPrint("No file provided. Exiting.", ERR_COLOR, 27)
 		os.Exit(0)
 	}
 

@@ -18,6 +18,14 @@ const (
 	A7 = 0xD34D34D3
 )
 
+// func u32ToBytes(src []uint32) []byte {
+// 	buf := make([]byte, len(src)*4)
+// 	for i, v := range src {
+// 		binary.LittleEndian.PutUint32(buf[i*4:], v)
+// 	}
+// 	return buf
+// }
+
 func bytesToU32(src []byte) []uint32 {
 	out := make([]uint32, len(src)/4)
 	for i := range out {

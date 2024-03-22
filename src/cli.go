@@ -20,7 +20,7 @@ const (
 	ERR_COLOR   = "\033[1;38;2;255;17;0m"
 	INFO_COLOR  = "\033[1;38;2;50;237;215m"
 	OK_COLOR    = "\033[1;38;2;100;207;112m"
-	TITLE_COLOR = "\033[1;38;2;138;120;255m"
+	TITLE_COLOR = "\033[1;38;2;165;97;255m"
 )
 
 var (
@@ -74,6 +74,12 @@ func taskMaster(filename string) {
 	seed := [16]byte{}
 	nonce := [12]byte{}
 
+	// 	Get output file name
+	out_name := *outFlag
+	if out_name == "" {
+		out_name = "_output"
+	}
+
 	if *seedFlag != "" {
 		file, err := os.ReadFile(*seedFlag)
 		if err != nil {
@@ -81,26 +87,30 @@ func taskMaster(filename string) {
 		}
 		copy(seed[:], file[:])
 	} else {
-		possible := filename + ".lseed"
+		possible := out_name + ".lseed"
+
+		if *decFlag {
+			possible = *fileFlag + ".lseed"
+		}
+
 		// 	Check if a .lnonce file exists with same name as this provided file
 		//	Lets user avoid specifying init params that retain the default names
 		if _, err := os.Stat(possible); errors.Is(err, os.ErrNotExist) {
 			if !*decFlag {
-				rand.Read(seed[:])
+				rand.Read(seed[0:])
 				fo, _ := os.Create(possible)
-				fo.Write(seed[:])
+				fo.Write(seed[0:])
 				fo.Close()
 			} else {
 				delayedPrint("Missing key and nonce parameters for decryption.", ERR_COLOR, 20, true)
 				os.Exit(1)
 			}
 		} else {
-			fmt.Println("Autofind seed success")
 			file, err := os.ReadFile(possible)
 			if err != nil {
 				gameOver(err)
 			}
-			copy(seed[:], file[:])
+			copy(seed[0:], file[:])
 		}
 	}
 
@@ -111,25 +121,28 @@ func taskMaster(filename string) {
 		}
 		copy(nonce[:], file[:])
 	} else {
-		possible := filename + ".lnonce"
+		possible := out_name + ".lnonce"
+
+		if *decFlag {
+			possible = *fileFlag + ".lnonce"
+		}
 
 		if _, err := os.Stat(possible); errors.Is(err, os.ErrNotExist) {
 			if !*decFlag {
-				rand.Read(nonce[:])
+				rand.Read(nonce[0:])
 				fo, _ := os.Create(possible)
-				fo.Write(nonce[:])
+				fo.Write(nonce[0:])
 				fo.Close()
 			} else {
 				delayedPrint("Missing key and nonce parameters for decryption.", ERR_COLOR, 20, true)
 				os.Exit(1)
 			}
 		} else {
-			fmt.Println("Autofind nonce success")
 			file, err := os.ReadFile(possible)
 			if err != nil {
 				gameOver(err)
 			}
-			copy(nonce[:], file[:])
+			copy(nonce[0:], file[:])
 		}
 	}
 
@@ -137,12 +150,6 @@ func taskMaster(filename string) {
 	file, err := os.ReadFile(filename)
 	if err != nil {
 		gameOver(err)
-	}
-
-	// 	Get output file name
-	out_name := *outFlag
-	if out_name == "" {
-		out_name = "_output"
 	}
 
 	lilith := Lilith{}
@@ -160,7 +167,7 @@ func taskMaster(filename string) {
 
 		if *txtFlag {
 			//	If text flag set, interpret as text file
-			fo, _ := os.Create(out_name)
+			fo, _ := os.Create(out_name + ".txt")
 			fmt.Println(string(plaintext))
 			fo.WriteString(string(plaintext))
 			fo.Sync()

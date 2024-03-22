@@ -165,12 +165,20 @@ func taskMaster(filename string) {
 	} else {
 		plaintext := lilith.Decrypt(file)
 
+		last := len(plaintext) - 1
+		for last > 0 {
+			if plaintext[last] == 0 {
+				last -= 1
+				continue
+			}
+			break
+		}
+
 		if *txtFlag {
 			//	If text flag set, interpret as text file
 			fo, _ := os.Create(out_name + ".txt")
-			fmt.Println(string(plaintext))
-			fo.WriteString(string(plaintext))
-			fo.Sync()
+			fmt.Println(string(plaintext[:last+1]))
+			fo.WriteString(string(plaintext[:last+1]))
 			fo.Close()
 		} else {
 			//	Otherwise, interpret as binary

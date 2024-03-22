@@ -1,9 +1,8 @@
 package lilith
 
 import (
-	"bytes"
 	"crypto/rand"
-	"encoding/binary"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -15,20 +14,25 @@ import (
 )
 
 const (
-	MAJOR      = 0
-	MINOR      = 5
-	PATCH      = 0
-	ERR_COLOR  = "\033[1;38;2;255;17;0m"
-	INFO_COLOR = "\033[1;38;2;50;237;215m"
+	MAJOR       = 0
+	MINOR       = 5
+	PATCH       = 0
+	ERR_COLOR   = "\033[1;38;2;255;17;0m"
+	INFO_COLOR  = "\033[1;38;2;50;237;215m"
+	OK_COLOR    = "\033[1;38;2;100;207;112m"
+	TITLE_COLOR = "\033[1;38;2;138;120;255m"
 )
 
 var (
 	VERSION_STRING = fmt.Sprintf("%d.%d.%d", MAJOR, MINOR, PATCH)
-	opFlag         = flag.String("op", "ENC", "Operation to perform. ENC = encrypt, DEC = decrypt")
+	encFlag        = flag.Bool("e", false, "Encrypt the provided file.")
+	decFlag        = flag.Bool("d", false, "Decrypt the provided file.")
 	versionFlag    = flag.Bool("v", false, "Version of this software ("+VERSION_STRING+")")
-	fileFlag       = flag.String("f", "", "File name where output is written")
-	seedFlag       = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
-	nonceFlag      = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
+	fileFlag       = flag.String("f", "", "File name where input is read from")
+	outFlag        = flag.String("o", "", "File name where output is written to.")
+	seedFlag       = flag.String("s", "", "File name containing 128-bit seed and 96-bit nonce. Must be a binary file.")
+	nonceFlag      = flag.String("n", "", "File name containing 128-bit seed. Must be a binary file.")
+	txtFlag        = flag.Bool("t", false, "Save decrypted output as a text file")
 )
 
 func delayedEnd() {

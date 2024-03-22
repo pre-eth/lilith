@@ -79,7 +79,7 @@ c. 	Shift Rows Transformation: The action of shifting rows is particularly
 	respectively.
 */
 func shiftRows(ptext []byte) {
-	row2 := binary.BigEndian.Uint32(ptext)
+	row2 := binary.BigEndian.Uint32(ptext[:4])
 	row3 := binary.BigEndian.Uint32(ptext[4:])
 	row4 := binary.BigEndian.Uint32(ptext[8:])
 
@@ -87,7 +87,7 @@ func shiftRows(ptext []byte) {
 	row3 = rotate(row3, 16)
 	row4 = rotate(row4, 24)
 
-	binary.LittleEndian.PutUint32(ptext, row2)
+	binary.LittleEndian.PutUint32(ptext[:4], row2)
 	binary.LittleEndian.PutUint32(ptext[4:], row3)
 	binary.LittleEndian.PutUint32(ptext[8:], row4)
 }

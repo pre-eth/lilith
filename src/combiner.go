@@ -196,9 +196,41 @@ func dynamicFold(key *[8]uint32, ptext []byte, operation bool) {
 	}
 }
 
-func combiner(key []uint16, ptext []byte, sbox []byte) {
-	add_round_ks(key, ptext)
-	byte_substitution(sbox, ptext)
-	shiftRows(ptext)
-	dynamicFold(key, ptext)
+func combiner(key *[8]uint32, ptext []byte, sbox *[256]byte) {
+	fmt.Println(key)
+
+	diagram := [16]string{}
+
+	addRoundKs(key, ptext)
+	byteSubstitution(sbox, ptext)
+	// shiftRows(ptext)
+	for i := 0; i < 16; i += 4 {
+		diagram[i] = fmt.Sprintf(INFO_COLOR+"%d %d %d %d | ", ptext[i], ptext[i+1], ptext[i+2], ptext[i+3])
+	}
+	dynamicFold(key, ptext, false)
+
+	for i := 0; i < 16; i += 4 {
+		diagram[i] += fmt.Sprintf(INFO_COLOR+" %d %d %d %d\033[m\n", ptext[i], ptext[i+1], ptext[i+2], ptext[i+3])
+		print(diagram[i])
+	}
+}
+
+func invCombiner(key *[8]uint32, ptext []byte, sbox *[256]byte) {
+	diagram := [16]string{}
+
+	for i := 0; i < 16; i += 4 {
+		diagram[i] = fmt.Sprintf(INFO_COLOR+"%d %d %d %d | ", ptext[i], ptext[i+1], ptext[i+2], ptext[i+3])
+	}
+	fmt.Println(key)
+	dynamicFold(key, ptext, true)
+	for i := 0; i < 16; i += 4 {
+		diagram[i] += fmt.Sprintf(INFO_COLOR+" %d %d %d %d\033[m\n", ptext[i], ptext[i+1], ptext[i+2], ptext[i+3])
+		print(diagram[i])
+	}
+	// shiftRows(ptext)
+	byteSubstitution(sbox, ptext)
+	addRoundKs(key, ptext)
+
+	fmt.Println(diagram)
+	// fmt.Println(ptext)
 }

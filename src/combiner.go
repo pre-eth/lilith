@@ -1,6 +1,9 @@
 package lilith
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+)
 
 /*
 	For the combiner algorithm, the length of the cipher key is 128 bits. Each
@@ -23,23 +26,23 @@ a. 	Add Round Keystream Transformation: The keystream generated from the
 
 	NOTE: The parameter ptext will be refered to as the "state" from now on
 */
-func add_round_ks(key []uint16, ptext []byte) {
-	ptext[0] ^= uint8(key[0])
-	ptext[1] ^= uint8(key[1])
-	ptext[2] ^= uint8(key[2])
-	ptext[3] ^= uint8(key[3])
-	ptext[4] ^= uint8(key[4])
-	ptext[5] ^= uint8(key[5])
-	ptext[6] ^= uint8(key[6])
-	ptext[7] ^= uint8(key[7])
-	ptext[8] ^= uint8(key[0] >> 8)
-	ptext[9] ^= uint8(key[1] >> 8)
-	ptext[10] ^= uint8(key[2] >> 8)
-	ptext[11] ^= uint8(key[3] >> 8)
-	ptext[12] ^= uint8(key[4] >> 8)
-	ptext[13] ^= uint8(key[5] >> 8)
-	ptext[14] ^= uint8(key[6] >> 8)
-	ptext[15] ^= uint8(key[7] >> 8)
+func addRoundKs(key *[8]uint32, ptext []byte) {
+	ptext[0] ^= byte(key[0])
+	ptext[1] ^= byte(key[0] >> 8)
+	ptext[2] ^= byte(key[1])
+	ptext[3] ^= byte(key[1] >> 8)
+	ptext[4] ^= byte(key[2])
+	ptext[5] ^= byte(key[2] >> 8)
+	ptext[6] ^= byte(key[3])
+	ptext[7] ^= byte(key[3] >> 8)
+	ptext[8] ^= byte(key[4])
+	ptext[9] ^= byte(key[4] >> 8)
+	ptext[10] ^= byte(key[5])
+	ptext[11] ^= byte(key[5] >> 8)
+	ptext[12] ^= byte(key[6])
+	ptext[13] ^= byte(key[6] >> 8)
+	ptext[14] ^= byte(key[7])
+	ptext[15] ^= byte(key[7] >> 8)
 }
 
 /*
@@ -52,18 +55,17 @@ b. 	Byte Substitution Transformation: The Sub Byte transformation is a non-linea
 	The proposed cipher is designed to have restrictions on the amount of ROM available,
 	thus allowing the S-box to use only a small amount of memory with only 256 entries.
 */
-func byte_substitution(sbox []byte, ptext []byte) {
+func byteSubstitution(sbox *[256]byte, ptext []byte) {
 	i := 0
+	var row byte = 0
+	var col byte = 0
 	for i < 16 {
-		ptext[i+0] = sbox[ptext[i+0]]
-		ptext[i+1] = sbox[ptext[i+1]]
-		ptext[i+2] = sbox[ptext[i+2]]
-		ptext[i+3] = sbox[ptext[i+3]]
-		ptext[i+4] = sbox[ptext[i+4]]
-		ptext[i+5] = sbox[ptext[i+5]]
-		ptext[i+6] = sbox[ptext[i+6]]
-		ptext[i+7] = sbox[ptext[i+7]]
-		i += 8
+		row = ptext[i] & 15
+		col = (ptext[i] >> 4) & 15
+		// fmt.Printf("was: %d ", ptext[i])
+		ptext[i] = sbox[(col<<4)+row]
+		// fmt.Printf("now: %d\n", ptext[i])
+		i += 1
 	}
 }
 

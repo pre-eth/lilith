@@ -92,13 +92,38 @@ func (l *Lilith) Init(seed *[16]byte, nonce *[12]byte, operation bool, first_byt
 	fmt.Printf("%v\n", l.key)
 }
 
-	// Logic depends on bytes of 16 blocks, so process leftover blocks differently
-	ctext_len -= ctext_len & 15
+func (l *Lilith) Encrypt(file_bytes []byte) []byte {
+	delayedPrint("LILITH "+VERSION_STRING+" - ENCRYPT", TITLE_COLOR, 20, false)
 
+	// 	Logic depends on bytes of 16 blocks, so process leftover blocks differently
+	//	Extend the output buffer, pad with 0s as needed
+	ctext_len := len(file_bytes)
+	leftovers := ctext_len & 15
+	cutoff := ctext_len
+	ctext_len += 16 - leftovers
+
+	for cutoff < ctext_len {
+		file_bytes = append(file_bytes, 0)
+		cutoff += 1
+	}
+
+	i := 0
+	cbytes := [8]uint32{}
 	for i < ctext_len {
-		combiner(key_stream, ciphertext[i:], SBOX)
-		nextState(bytes_u32, ctr, &phi)
-		extractKeystream(key_stream, bytes_u32)
+		fmt.Println(file_bytes[i : i+16])
+		combiner(&l.key, file_bytes[i:i+16], &l.sbox)
+		fmt.Println(file_bytes[i : i+16])
+		bytesToU32(&cbytes, file_bytes[i:i+16])
+		nextState(&cbytes, &l.ctr, &l.phi)
+		extractKeystream(&l.key, &cbytes)
+		i += 16
+		fmt.Println(i)
+	}
+
+	delayedPrint("Completed encryption. Exiting.", OK_COLOR, 20, true)
+
+	return file_bytes
+}
 		i += 16
 	}
 

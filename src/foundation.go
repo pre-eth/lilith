@@ -1,12 +1,10 @@
 package lilith
 
-import "encoding/binary"
-
 const (
 	U32_MAX = 1 << 32
 
-	// Following constants are used in the counter system to obtain the next counter
-	// for use with the next_state()
+	// 	Following constants are used in the counter system to obtain the next counter
+	// 	for use with the next_state()
 
 	A0 = 0x4D34D34D
 	A1 = 0xD34D34D3
@@ -18,20 +16,11 @@ const (
 	A7 = 0xD34D34D3
 )
 
-// func u32ToBytes(src []uint32) []byte {
-// 	buf := make([]byte, len(src)*4)
-// 	for i, v := range src {
-// 		binary.LittleEndian.PutUint32(buf[i*4:], v)
-// 	}
-// 	return buf
-// }
-
-func bytesToU32(src []byte) []uint32 {
-	out := make([]uint32, len(src)/4)
-	for i := range out {
-		out[i] = binary.LittleEndian.Uint32(src[i*4:])
+func bytesToU32(out *[8]uint32, src []byte) {
+	i := 0
+	for ; i < 16; i += 2 {
+		out[i>>1] = uint32(src[i+1])<<8 | uint32(src[i])
 	}
-	return out
 }
 
 // For computing the indices needed by the combiner for dynamic folding

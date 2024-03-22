@@ -37,7 +37,7 @@ var (
 
 func delayedEnd() {
 	j := 0
-	for j < 3 {
+	for j < 2 {
 		fmt.Print("\033[1D.")
 		time.Sleep(time.Duration(250) * time.Millisecond)
 		fmt.Print("\033[1D ")
@@ -62,7 +62,7 @@ func delayedPrint(text string, style string, delay_time float32, delay_end bool)
 		time.Sleep(time.Duration(delay_time) * time.Millisecond)
 		runeValue, w := utf8.DecodeRuneInString(text[i:])
 		fmt.Printf("%c", runeValue)
-		if delay_end && runeValue == period && i != text_length-1 {
+		if delay_end && runeValue == period {
 			delayedEnd()
 		}
 		i += w

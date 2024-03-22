@@ -70,19 +70,38 @@ func delayedPrint(text string, style string, delay_time float32, delay_end bool)
 	fmt.Print("\033[m\n")
 }
 
-func inputParams(seed []uint16, nonce []uint32) {
-	bytebuf := make([]byte, 28)
+func taskMaster(filename string) {
+	seed := [16]byte{}
+	nonce := [12]byte{}
+
 	if *seedFlag != "" {
 		file, err := os.ReadFile(*seedFlag)
 		if err != nil {
 			gameOver(err)
 		}
-		rbuf := bytes.NewReader(file[0:16])
-		binary.Read(rbuf, binary.LittleEndian, &seed)
+		copy(seed[:], file[:])
 	} else {
-		rand.Read(bytebuf[0:16])
-		rbuf := bytes.NewReader(bytebuf[0:16])
-		binary.Read(rbuf, binary.LittleEndian, &seed)
+		possible := filename + ".lseed"
+		// 	Check if a .lnonce file exists with same name as this provided file
+		//	Lets user avoid specifying init params that retain the default names
+		if _, err := os.Stat(possible); errors.Is(err, os.ErrNotExist) {
+			if !*decFlag {
+				rand.Read(seed[:])
+				fo, _ := os.Create(possible)
+				fo.Write(seed[:])
+				fo.Close()
+			} else {
+				delayedPrint("Missing key and nonce parameters for decryption.", ERR_COLOR, 20, true)
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Autofind seed success")
+			file, err := os.ReadFile(possible)
+			if err != nil {
+				gameOver(err)
+			}
+			copy(seed[:], file[:])
+		}
 	}
 
 	if *nonceFlag != "" {
@@ -90,35 +109,73 @@ func inputParams(seed []uint16, nonce []uint32) {
 		if err != nil {
 			gameOver(err)
 		}
-		rbuf := bytes.NewReader(file[16:28])
-		binary.Read(rbuf, binary.LittleEndian, &nonce)
-
+		copy(nonce[:], file[:])
 	} else {
-		rand.Read(bytebuf[16:28])
-		rbuf := bytes.NewReader(bytebuf[16:28])
-		binary.Read(rbuf, binary.LittleEndian, &nonce)
+		possible := filename + ".lnonce"
+
+		if _, err := os.Stat(possible); errors.Is(err, os.ErrNotExist) {
+			if !*decFlag {
+				rand.Read(nonce[:])
+				fo, _ := os.Create(possible)
+				fo.Write(nonce[:])
+				fo.Close()
+			} else {
+				delayedPrint("Missing key and nonce parameters for decryption.", ERR_COLOR, 20, true)
+				os.Exit(1)
+			}
+		} else {
+			fmt.Println("Autofind nonce success")
+			file, err := os.ReadFile(possible)
+			if err != nil {
+				gameOver(err)
+			}
+			copy(nonce[:], file[:])
+		}
 	}
-}
 
-func taskMaster(file []byte, operation string) {
-	seed := make([]uint16, 8)
-	nonce := make([]uint32, 3)
-
-	inputParams(seed, nonce)
-
-	switch operation {
-	case "ENC":
-		Lilith(file, seed, nonce)
-	case "DEC":
-		Lilith(file, seed, nonce)
-	default:
-		delayedPrint("❌ Missing or invalid operation. Exiting.", ERR_COLOR, 27, true)
-		os.Exit(1)
+	//	Bad file?
+	file, err := os.ReadFile(filename)
+	if err != nil {
+		gameOver(err)
 	}
-}
 
-func gameOver(err error) {
-	panic(string(ERR_COLOR) + err.Error() + "\033[m")
+	// 	Get output file name
+	out_name := *outFlag
+	if out_name == "" {
+		out_name = "_output"
+	}
+
+	lilith := Lilith{}
+	lilith.Init(&seed, &nonce, *decFlag, file[0])
+
+	if *encFlag {
+		fmt.Println(file)
+		ciphertext := lilith.Encrypt(file)
+		fmt.Println(ciphertext)
+
+		//	Save encrypted output
+		fo, _ := os.Create(out_name)
+		fo.Write(ciphertext)
+		fo.Close()
+	} else {
+		fmt.Println(file)
+		plaintext := lilith.Decrypt(file)
+		fmt.Println(plaintext)
+
+		if *txtFlag {
+			//	If text flag set, interpret as text file
+			fo, _ := os.Create(out_name)
+			fmt.Println(string(plaintext))
+			fo.WriteString(string(plaintext))
+			fo.Sync()
+			fo.Close()
+		} else {
+			//	Otherwise, interpret as binary
+			fo, _ := os.Create(out_name)
+			fo.Write(plaintext)
+			fo.Close()
+		}
+	}
 }
 
 func ArgParse(argc int, args []string) {

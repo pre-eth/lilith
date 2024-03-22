@@ -179,6 +179,7 @@ func taskMaster(filename string) {
 }
 
 func ArgParse(argc int, args []string) {
+	//	Get terminal size for centering the help header
 	cmd := exec.Command("stty", "size")
 	cmd.Stdin = os.Stdin
 	out, err := cmd.Output()
@@ -186,32 +187,45 @@ func ArgParse(argc int, args []string) {
 		gameOver(err)
 	}
 
+	//	Parse size to int
 	width_string := strings.Split(string(out), " ")[1]
-
 	width, _ := strconv.Atoi(strings.TrimSpace(width_string))
-
 	width = (width / 2) - 4
 
+	//	Prepare -h contents
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "\033[%dC[OPTIONS]\n", width)
 		flag.PrintDefaults()
 	}
 
-	if argc == 1 {
-		delayedPrint("No file provided. Exiting.", ERR_COLOR+"❌ ", 20, true)
-		os.Exit(0)
-	}
 	flag.Parse()
 
+	//	Print version
 	if *versionFlag {
-		fmt.Println(INFO_COLOR + "ℹ️ " + VERSION_STRING)
+		fmt.Println(INFO_COLOR + VERSION_STRING)
 		os.Exit(0)
 	}
 
-	file, err := os.ReadFile(*fileFlag)
-	if err != nil {
-		gameOver(err)
+	//	Validate operation
+	if *encFlag && *decFlag {
+		delayedPrint("Only operation may be specified at a time.", ERR_COLOR, 20, true)
+		os.Exit(1)
+	} else if !*encFlag && !*decFlag {
+		delayedPrint("Missing or invalid operation.", ERR_COLOR, 20, true)
+		os.Exit(1)
 	}
 
-	taskMaster(file, *opFlag)
+	//	See if input file name provided
+	if *fileFlag == "" {
+		//	No file!
+		delayedPrint("No file provided.", ERR_COLOR, 20, true)
+		os.Exit(1)
+	}
+
+	// Perform the requested operation
+	taskMaster(*fileFlag)
+}
+
+func gameOver(err error) {
+	panic(string(ERR_COLOR) + err.Error() + "\033[m")
 }

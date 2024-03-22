@@ -30,8 +30,8 @@ var (
 	versionFlag    = flag.Bool("v", false, "Version of this software ("+VERSION_STRING+")")
 	fileFlag       = flag.String("f", "", "File name where input is read from")
 	outFlag        = flag.String("o", "", "File name where output is written to.")
-	seedFlag       = flag.String("s", "", "File name containing 128-bit seed and 96-bit nonce. Must be a binary file.")
-	nonceFlag      = flag.String("n", "", "File name containing 128-bit seed. Must be a binary file.")
+	seedFlag       = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
+	nonceFlag      = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
 	txtFlag        = flag.Bool("t", false, "Save decrypted output as a text file")
 )
 

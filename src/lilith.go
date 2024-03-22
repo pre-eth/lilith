@@ -124,8 +124,25 @@ func (l *Lilith) Encrypt(file_bytes []byte) []byte {
 
 	return file_bytes
 }
+
+func (l *Lilith) Decrypt(file_bytes []byte) []byte {
+	delayedPrint("LILITH "+VERSION_STRING+" - DECRYPT", TITLE_COLOR, 20, false)
+
+	i := 0
+	ptext_len := len(file_bytes)
+	fmt.Printf("decrypt len: %d\n", ptext_len)
+	cbytes := [8]uint32{}
+	for i < ptext_len {
+		fmt.Println(file_bytes[i : i+16])
+		bytesToU32(&cbytes, file_bytes[i:i+16])
+		invCombiner(&l.key, file_bytes[i:i+16], &l.sbox)
+		nextState(&cbytes, &l.ctr, &l.phi)
+		extractKeystream(&l.key, &cbytes)
 		i += 16
+		fmt.Println(i)
 	}
 
-	return decrypt_key
+	delayedPrint("Completed decryption. Exiting.", OK_COLOR, 20, true)
+
+	return file_bytes
 }

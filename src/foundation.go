@@ -39,21 +39,21 @@ func swap(arr []byte, a uint, b uint) {
 	arr[b] = tmp
 }
 
-/*
-The state and counter variables are initialized from the sub keys as follows
-For original piecewise function, see img/INIT_PIECEWISE.png
+func initPiecewise(arr *[8]uint32, h byte, i byte, j byte) uint32 {
+	/*
+		The state and counter variables are initialized from the sub keys as follows
+		For original piecewise function, see img/INIT_PIECEWISE.png
 
-NOTE: param <arr> is guaranteed by caller to be at least of size 8
-*/
-func initPiecewise(arr []uint16, h byte, i byte, j byte) uint32 {
-	num := uint32(arr[(i+j)&7]) << 16
-	num |= uint32(arr[(h+j)&7])
+		NOTE: param <arr> is guaranteed by caller to be at least of size 8
+	*/
+	num := arr[(i+j)&7] << 16
+	num |= arr[(h+j)&7]
 	return num
 }
 
-// phi() determines the value of the counter carry bit used in ctr_system()
-// For original function that gives counter carry bit, see img/COUNTER_CARRY.png
 func phi(ctr uint32, a uint32, cc *byte) uint32 {
+	// 	phi() determines the value of the counter carry bit used in ctr_system()
+	// 	For original function that gives counter carry bit, see img/COUNTER_CARRY.png
 	var sum uint64 = uint64(ctr + a + uint32(*cc))
 	if sum >= U32_MAX {
 		*cc = 1
@@ -63,8 +63,8 @@ func phi(ctr uint32, a uint32, cc *byte) uint32 {
 	return uint32(*cc)
 }
 
-// The counter dynamics defined in Section 2.5, which you can also find in img/COUNTER_SYSTEM.png
-func ctrSystem(ctr []uint32, _phi *byte) {
+func ctrSystem(ctr *[8]uint32, _phi *byte) {
+	// 	The counter dynamics defined in Section 2.5, which you can also find in img/COUNTER_SYSTEM.png
 	ctr[0] = (ctr[0] + A0 + phi(ctr[0], A0, _phi)) & (U32_MAX - 1)
 	ctr[1] = (ctr[1] + A1 + phi(ctr[1], A1, _phi)) & (U32_MAX - 1)
 	ctr[2] = (ctr[2] + A2 + phi(ctr[2], A2, _phi)) & (U32_MAX - 1)
@@ -75,14 +75,15 @@ func ctrSystem(ctr []uint32, _phi *byte) {
 	ctr[7] = (ctr[7] + A7 + phi(ctr[7], A7, _phi)) & (U32_MAX - 1)
 }
 
-// Represents ((x + j)^2 XOR (((x + j)^2) >> 32)) mod 2^32
-func gFunction(state []uint32, ctr []uint32, gfn []uint32) {
+func gFunction(state *[8]uint32, ctr *[8]uint32, gfn *[8]uint32) {
+	// 	Represents ((x + j)^2 XOR (((x + j)^2) >> 32)) mod 2^32
 	var i byte = 0
 	var tmp uint64
 	for i < 8 {
-		tmp = uint64(state[i]) + uint64(ctr[i])
+		tmp = uint64(state[i] + ctr[i])
 		tmp *= tmp
 		gfn[i] = uint32((tmp ^ (tmp >> 32)) & (U32_MAX - 1))
+		i += 1
 	}
 }
 

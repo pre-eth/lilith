@@ -106,35 +106,59 @@ d. 	Dynamic Folding Transformation: In this transformation a complex rotation
 	The paper doesn't specify how to select the keystream values, only that specific
 	values be chosen. So this scheme below is just one of many possibilities. All we
 	do is sum adjacent bytes in the keystream and then mod by the remainder we need
-	(first value 1 so our direction is between (0,0) and (1,1), and second value 3
-	to select one a position in this 4x4 block)
+	(first value mod 1 so our direction is between (0,0) and (1,1), and second value
+	mod 3 to select a position in this 4x4 block)
 
 	For a clearer depiction, see img/DYNAMIC_FOLD.png
 */
-func dynamicFold(key []uint16, ptext []byte) {
+func dynamicFold(key *[8]uint32, ptext []byte, operation bool) {
 	rot_x := dynamicIdx(key, 0, 1)
 	rot_y := dynamicIdx(key, 2, 1)
 	pos_x := dynamicIdx(key, 4, 3)
 	pos_y := dynamicIdx(key, 6, 3)
 
-	var start uint16 = 0
+	fmt.Printf("rot x: %d rot y: %d pos x: %d pos y: %d\n", rot_x, rot_y, pos_x, pos_y)
+
+	// if operation {
+	// 	swapVar := rot_x
+	// 	rot_x = rot_y
+	// 	rot_y = swapVar
+
+	// 	swapVar = pos_x
+	// 	pos_x = pos_y
+	// 	pos_y = swapVar
+	// }
+
+	start := 0
 	if pos_x >= 2 {
 		start += 1
 	}
+
 	if pos_y <= 2 {
 		start += 2
 	}
 
-	var end uint16 = rot_x + (rot_y << 1)
-
-	// https://graphics.stanford.edu/~seander/bithacks.html#IntegerAbs
-	var tmp int32 = int32(end - start)
+	end := rot_x + (rot_y << 1)
+	tmp := end - start
+	if operation && tmp != 0 {
+		tmp -= 2
+	}
 	if tmp < 0 {
 		tmp *= -1
 	}
 
-	switch tmp {
+	// if operation {
+	// 	swapVar := start
+	// 	start = end
+	// 	end = swapVar
+	// 	tmp = end - start
+	// }
+
+	fmt.Printf("start: %d end: %d tmp: %d\n", start, end, tmp)
+
+	switch tmp & 3 {
 	case 1:
+		fmt.Printf("running 1... decrypt = %v\n", operation)
 		swap(ptext, 0, 8)
 		swap(ptext, 1, 9)
 		swap(ptext, 4, 12)

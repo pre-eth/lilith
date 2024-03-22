@@ -88,10 +88,10 @@ func gFunction(state *[8]uint32, ctr *[8]uint32, gfn *[8]uint32) {
 }
 
 func sboxMix(nonce uint32) byte {
-	return byte(nonce&0xFF) ^ byte(nonce>>8) ^ byte(nonce>>16)
+	return byte(nonce) ^ byte(nonce>>8) ^ byte(nonce>>16)
 }
 
-func srboxLookup(i uint16, sbox []byte, skey []byte) byte {
-	idx := byte(i)
-	return sbox[sbox[sbox[sbox[idx^skey[0]]^skey[1]]^skey[2]]^skey[3]]
+func srboxLookup(i byte, sbox *[256]byte, skey *[4]byte) byte {
+	return sbox[sbox[sbox[sbox[i^skey[0]]^skey[1]]^skey[2]]^skey[3]]
+}
 }

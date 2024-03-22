@@ -168,7 +168,7 @@ func extractKeystream(key *[8]uint32, state *[8]uint32) {
 	key[7] = ((state[6] >> 16) & 0xFFFF) ^ (state[1] & 0xFFFF)
 }
 
-func generateC0(ctext *[16]byte, key *[8]uint32, sbox *[256]byte, operation bool) {
+func generateC0(ctext *[16]byte, key *[8]uint32, sbox *[256]byte) {
 	/*
 		Text 1 (𝑃0) is used only once in the algorithm. It is 16-bytes text utilized
 		as a starting (virtual) plaintext which is input to the encryption/decryption

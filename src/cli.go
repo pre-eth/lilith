@@ -149,18 +149,14 @@ func taskMaster(filename string) {
 	lilith.Init(&seed, &nonce, *decFlag, file[0])
 
 	if *encFlag {
-		fmt.Println(file)
 		ciphertext := lilith.Encrypt(file)
-		fmt.Println(ciphertext)
 
 		//	Save encrypted output
 		fo, _ := os.Create(out_name)
 		fo.Write(ciphertext)
 		fo.Close()
 	} else {
-		fmt.Println(file)
 		plaintext := lilith.Decrypt(file)
-		fmt.Println(plaintext)
 
 		if *txtFlag {
 			//	If text flag set, interpret as text file

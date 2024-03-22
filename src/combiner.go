@@ -2,7 +2,6 @@ package lilith
 
 import (
 	"encoding/binary"
-	"fmt"
 )
 
 /*
@@ -117,18 +116,6 @@ func dynamicFold(key *[8]uint32, ptext []byte, operation bool) {
 	pos_x := dynamicIdx(key, 4, 3)
 	pos_y := dynamicIdx(key, 6, 3)
 
-	fmt.Printf("rot x: %d rot y: %d pos x: %d pos y: %d\n", rot_x, rot_y, pos_x, pos_y)
-
-	// if operation {
-	// 	swapVar := rot_x
-	// 	rot_x = rot_y
-	// 	rot_y = swapVar
-
-	// 	swapVar = pos_x
-	// 	pos_x = pos_y
-	// 	pos_y = swapVar
-	// }
-
 	start := 0
 	if pos_x >= 2 {
 		start += 1
@@ -140,25 +127,15 @@ func dynamicFold(key *[8]uint32, ptext []byte, operation bool) {
 
 	end := rot_x + (rot_y << 1)
 	tmp := end - start
-	if operation && tmp != 0 {
+	if operation && tmp&1 != 0 {
 		tmp -= 2
 	}
 	if tmp < 0 {
 		tmp *= -1
 	}
 
-	// if operation {
-	// 	swapVar := start
-	// 	start = end
-	// 	end = swapVar
-	// 	tmp = end - start
-	// }
-
-	fmt.Printf("start: %d end: %d tmp: %d\n", start, end, tmp)
-
 	switch tmp & 3 {
 	case 1:
-		fmt.Printf("running 1... decrypt = %v\n", operation)
 		swap(ptext, 0, 8)
 		swap(ptext, 1, 9)
 		swap(ptext, 4, 12)
@@ -197,40 +174,15 @@ func dynamicFold(key *[8]uint32, ptext []byte, operation bool) {
 }
 
 func combiner(key *[8]uint32, ptext []byte, sbox *[256]byte) {
-	fmt.Println(key)
-
-	diagram := [16]string{}
-
 	addRoundKs(key, ptext)
 	byteSubstitution(sbox, ptext)
-	// shiftRows(ptext)
-	for i := 0; i < 16; i += 4 {
-		diagram[i] = fmt.Sprintf(INFO_COLOR+"%d %d %d %d | ", ptext[i], ptext[i+1], ptext[i+2], ptext[i+3])
-	}
+	shiftRows(ptext)
 	dynamicFold(key, ptext, false)
-
-	for i := 0; i < 16; i += 4 {
-		diagram[i] += fmt.Sprintf(INFO_COLOR+" %d %d %d %d\033[m\n", ptext[i], ptext[i+1], ptext[i+2], ptext[i+3])
-		print(diagram[i])
-	}
 }
 
 func invCombiner(key *[8]uint32, ptext []byte, sbox *[256]byte) {
-	diagram := [16]string{}
-
-	for i := 0; i < 16; i += 4 {
-		diagram[i] = fmt.Sprintf(INFO_COLOR+"%d %d %d %d | ", ptext[i], ptext[i+1], ptext[i+2], ptext[i+3])
-	}
-	fmt.Println(key)
 	dynamicFold(key, ptext, true)
-	for i := 0; i < 16; i += 4 {
-		diagram[i] += fmt.Sprintf(INFO_COLOR+" %d %d %d %d\033[m\n", ptext[i], ptext[i+1], ptext[i+2], ptext[i+3])
-		print(diagram[i])
-	}
-	// shiftRows(ptext)
+	shiftRows(ptext)
 	byteSubstitution(sbox, ptext)
 	addRoundKs(key, ptext)
-
-	fmt.Println(diagram)
-	// fmt.Println(ptext)
 }

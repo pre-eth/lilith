@@ -2,7 +2,6 @@ package lilith
 
 import (
 	"encoding/binary"
-	"fmt"
 )
 
 type Lilith struct {
@@ -81,7 +80,7 @@ func (l *Lilith) Init(seed *[16]byte, nonce *[12]byte, operation bool, first_byt
 
 	// Generate the first cipher text
 	C0 := [16]byte{}
-	generateC0(&C0, &l.key, &l.sbox, operation)
+	generateC0(&C0, &l.key, &l.sbox)
 
 	// Generate KS0
 	bytesToU32(&l.key, C0[:])
@@ -89,7 +88,6 @@ func (l *Lilith) Init(seed *[16]byte, nonce *[12]byte, operation bool, first_byt
 	//	Get first keystream used for encryption/decryption (KS1)
 	nextState(&state, &l.ctr, &l.phi)
 	extractKeystream(&l.key, &state)
-	fmt.Printf("%v\n", l.key)
 }
 
 func (l *Lilith) Encrypt(file_bytes []byte) []byte {
@@ -110,14 +108,11 @@ func (l *Lilith) Encrypt(file_bytes []byte) []byte {
 	i := 0
 	cbytes := [8]uint32{}
 	for i < ctext_len {
-		fmt.Println(file_bytes[i : i+16])
 		combiner(&l.key, file_bytes[i:i+16], &l.sbox)
-		fmt.Println(file_bytes[i : i+16])
 		bytesToU32(&cbytes, file_bytes[i:i+16])
 		nextState(&cbytes, &l.ctr, &l.phi)
 		extractKeystream(&l.key, &cbytes)
 		i += 16
-		fmt.Println(i)
 	}
 
 	delayedPrint("Completed encryption. Exiting.", OK_COLOR, 20, true)
@@ -130,16 +125,13 @@ func (l *Lilith) Decrypt(file_bytes []byte) []byte {
 
 	i := 0
 	ptext_len := len(file_bytes)
-	fmt.Printf("decrypt len: %d\n", ptext_len)
 	cbytes := [8]uint32{}
 	for i < ptext_len {
-		fmt.Println(file_bytes[i : i+16])
 		bytesToU32(&cbytes, file_bytes[i:i+16])
 		invCombiner(&l.key, file_bytes[i:i+16], &l.sbox)
 		nextState(&cbytes, &l.ctr, &l.phi)
 		extractKeystream(&l.key, &cbytes)
 		i += 16
-		fmt.Println(i)
 	}
 
 	delayedPrint("Completed decryption. Exiting.", OK_COLOR, 20, true)

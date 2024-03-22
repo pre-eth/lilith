@@ -24,8 +24,8 @@ func bytesToU32(out *[8]uint32, src []byte) {
 }
 
 // For computing the indices needed by the combiner for dynamic folding
-func dynamicIdx(arr []uint16, idx uint, mod uint16) uint16 {
-	return (arr[idx] + arr[idx+1]) & mod
+func dynamicIdx(arr *[8]uint32, idx uint, mod uint32) int {
+	return int((arr[idx] + arr[idx+1]) & mod)
 }
 
 // Bitwise rotate left a 32-bit unsigned integer
@@ -33,15 +33,10 @@ func rotate(x uint32, shift byte) uint32 {
 	return (x << shift) | ((x >> (32 - shift)) & (1<<shift - 1))
 }
 
-/*
-Courtesy of: https://graphics.stanford.edu/~seander/bithacks.html#SwappingValuesXOR
-
-This is an old trick to exchange the values of the variables a and b without using
-extra space for a temporary variable.
-*/
 func swap(arr []byte, a uint, b uint) {
-	arr[b] ^= arr[a] ^ arr[b]
-	arr[a] ^= arr[b]
+	tmp := arr[a]
+	arr[a] = arr[b]
+	arr[b] = tmp
 }
 
 /*

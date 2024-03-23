@@ -3,7 +3,6 @@ package lilith
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/binary"
 	"errors"
 	"flag"
 	"fmt"
@@ -105,23 +104,22 @@ func delayedPrint(text string, style string, delay_time float32, delay_end bool)
 
 func saveDecrypted(outName string, data []byte) {
 	data = data[:totalSize]
-
 	if *txtFlag {
 		//	If text flag set, interpret as text file
 		fo, _ := os.Create(outName + ".txt")
-		fmt.Println("\n" + string(data[:totalSize]) + "\n")
-		fo.WriteString(string(data[:totalSize]))
+		fmt.Println("\n" + string(data) + "\n")
+		fo.WriteString(string(data))
 		fo.Close()
 	} else {
 		if *jpgFlag {
 			fo, _ := os.Create(outName + ".jpg")
-			img, _, err := image.Decode(bytes.NewReader(data[:totalSize]))
+			img, _, err := image.Decode(bytes.NewReader(data))
 			if err != nil {
 				fmt.Println(len(data))
 				log.Fatalln(err)
 			}
 			var opts jpeg.Options
-			opts.Quality = 1
+			opts.Quality = 100
 			jpeg.Encode(fo, img, &opts)
 			fo.Close()
 		} else if *pngFlag {
@@ -161,9 +159,6 @@ func getSeed(outName string, seed *[16]byte) {
 				fo, _ := os.Create(possible)
 				fo.Write(seed[0:])
 				fmt.Println(totalSize)
-				size := [8]byte{}
-				binary.LittleEndian.PutUint64(size[0:], uint64(totalSize))
-				fo.Write(size[0:])
 
 				fo.Close()
 			} else {
@@ -176,9 +171,6 @@ func getSeed(outName string, seed *[16]byte) {
 				gameOver(err)
 			}
 			copy(seed[0:], file[0:16])
-			ogSize := binary.LittleEndian.Uint64(file[16:])
-			fmt.Println(ogSize)
-			totalSize = int(ogSize)
 		}
 	}
 }
@@ -228,11 +220,12 @@ func taskMaster(filename string) {
 	}
 
 	//	Check if bad file and set output unit for CLI
-	file, err := os.ReadFile(filename)
+	inputData, err := os.ReadFile(filename)
 	if err != nil {
 		gameOver(err)
 	}
-	totalSize = len(file)
+
+	totalSize = len(inputData)
 
 	if totalSize > 1000 {
 		unit = "KB"
@@ -254,17 +247,17 @@ func taskMaster(filename string) {
 	// 	Initialize and perform requested operation
 
 	lilith := Lilith{}
-	lilith.Init(&seed, &nonce, *decFlag, file[0])
+	lilith.Init(&seed, &nonce, *decFlag, inputData[0])
 
 	if *encFlag {
-		ciphertext := lilith.Encrypt(file)
+		ciphertext := lilith.Encrypt(inputData)
 
 		//	Save encrypted output
 		fo, _ := os.Create(outName)
 		fo.Write(ciphertext)
 		fo.Close()
 	} else {
-		plaintext := lilith.Decrypt(file)
+		plaintext := lilith.Decrypt(inputData)
 
 		saveDecrypted(outName, plaintext)
 	}

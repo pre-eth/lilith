@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	MAJOR      = 0
-	MINOR      = 5
+	MAJOR      = 1
+	MINOR      = 0
 	PATCH      = 0
 	ErrColor   = "\033[1;38;2;255;17;0m"
 	InfoColor  = "\033[1;38;2;50;237;215m"
@@ -28,14 +28,14 @@ var (
 	VersionString         = fmt.Sprintf("%d.%d.%d", MAJOR, MINOR, PATCH)
 	encFlag               = flag.Bool("e", false, "Encrypt the provided file.")
 	decFlag               = flag.Bool("d", false, "Decrypt the provided file.")
-	versionFlag           = flag.Bool("v", false, "Version of this software ("+VersionString+")")
-	passFlag              = flag.Bool("r", false, "Round trip operation - encrypt and then decrypt")
-	fileFlag              = flag.String("f", "", "File name where input is read from")
+	versionFlag           = flag.Bool("v", false, "Version of this software ("+VersionString+").")
+	passFlag              = flag.Bool("r", false, "Round trip operation - encrypt and then decrypt.")
+	fileFlag              = flag.String("f", "", "File name where input is read from.")
 	outFlag               = flag.String("o", "", "File name where output is written to.")
 	seedFlag              = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
 	nonceFlag             = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
-	txtFlag               = flag.Bool("t", false, "Save decrypted output as a text file")
-	quickFlag             = flag.Bool("q", false, "Quick mode - reduce interface FX")
+	txtFlag               = flag.Bool("t", false, "Save decrypted output as a text file.")
+	quickFlag             = flag.Bool("q", false, "Quick mode - reduce interface FX.")
 	textDelay     float32 = 20.0
 	periodDelay           = true
 	unit                  = "B"
@@ -61,7 +61,7 @@ func delayedEnd() {
 	j := 0
 	for j < 2 {
 		fmt.Print("\033[1D.")
-		time.Sleep(time.Duration(250) * time.Millisecond)
+		time.Sleep(time.Duration(200) * time.Millisecond)
 		fmt.Print("\033[1D ")
 		time.Sleep(time.Duration(150) * time.Millisecond)
 		j += 1

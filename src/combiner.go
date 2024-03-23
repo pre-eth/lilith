@@ -128,8 +128,9 @@ func dynamicFold(key *[8]uint32, ptext []byte, operation bool) {
 	end := rot_x + (rot_y << 1)
 	tmp := end - start
 	if operation && tmp&1 != 0 {
-		tmp -= 2
+		tmp += 2
 	}
+
 	if tmp < 0 {
 		tmp *= -1
 	}

@@ -1,15 +1,10 @@
 package lilith
 
 import (
-	"bytes"
 	"crypto/rand"
 	"errors"
 	"flag"
 	"fmt"
-	"image"
-	"image/jpeg"
-	"image/png"
-	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -34,6 +29,7 @@ var (
 	encFlag               = flag.Bool("e", false, "Encrypt the provided file.")
 	decFlag               = flag.Bool("d", false, "Decrypt the provided file.")
 	versionFlag           = flag.Bool("v", false, "Version of this software ("+VersionString+")")
+	passFlag              = flag.Bool("r", false, "Round trip operation - encrypt and then decrypt")
 	fileFlag              = flag.String("f", "", "File name where input is read from")
 	outFlag               = flag.String("o", "", "File name where output is written to.")
 	seedFlag              = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
@@ -41,7 +37,7 @@ var (
 	txtFlag               = flag.Bool("t", false, "Save decrypted output as a text file")
 	jpgFlag               = flag.Bool("j", false, "Save decrypted output as a JPEG")
 	pngFlag               = flag.Bool("p", false, "Save decrypted output as a PNG")
-	quietFlag             = flag.Bool("q", false, "Quick mode - reduce output FX")
+	quickFlag             = flag.Bool("q", false, "Quick mode - reduce output FX")
 	textDelay     float32 = 20.0
 	periodDelay           = true
 	unit                  = "B"

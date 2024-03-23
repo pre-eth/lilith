@@ -1,10 +1,16 @@
 package lilith
 
 import (
+	"bytes"
 	"crypto/rand"
+	"encoding/binary"
 	"errors"
 	"flag"
 	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
+	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -33,21 +39,32 @@ var (
 	seedFlag              = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
 	nonceFlag             = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
 	txtFlag               = flag.Bool("t", false, "Save decrypted output as a text file")
-	quietFlag             = flag.Bool("q", false, "Less verbose and interactive output")
+	jpgFlag               = flag.Bool("j", false, "Save decrypted output as a JPEG")
+	pngFlag               = flag.Bool("p", false, "Save decrypted output as a PNG")
+	quietFlag             = flag.Bool("q", false, "Quick mode - reduce output FX")
 	textDelay     float32 = 20.0
 	periodDelay           = true
+	unit                  = "B"
+	unitSize              = 1
+	totalSize             = 0
 )
 
 // CLI spinner while performing operation
-func spinner() {
-	spinnerString := "⣾⣽⣻⢿⡿⣟⣯⣷"
-	fmt.Print(InfoColor)
-	for _, s := range spinnerString {
-		fmt.Printf("%c", s)
-		time.Sleep(time.Duration(20) * time.Millisecond)
-		fmt.Print("\033[1D")
+func spinner(written int) {
+	// spinnerString := "⣾⣽⣻⢿⡿⣟⣯⣷"
+	// fmt.Print(InfoColor)
+	// for _, s := range spinnerString {
+	// 	fmt.Printf("%c", s)
+	// 	time.Sleep(time.Duration(20) * time.Millisecond)
+	// 	fmt.Print("\033[1D")
+	// }
+
+	if written > totalSize {
+		written -= (written - totalSize)
 	}
-	fmt.Print("\033[m")
+
+	progress := fmt.Sprintf(" %d/%d%s", written/unitSize, totalSize/unitSize, unit)
+	fmt.Printf("\033[?25l\033[m %s\033[%dD", progress, len(progress)+1)
 }
 
 // Period blink animation
@@ -86,22 +103,49 @@ func delayedPrint(text string, style string, delay_time float32, delay_end bool)
 	fmt.Print("\033[m")
 }
 
-func taskMaster(filename string) {
-	seed := [16]byte{}
-	nonce := [12]byte{}
+func saveDecrypted(outName string, data []byte) {
+	data = data[:totalSize]
 
-	// 	Get output file name
-	outName := *outFlag
-	if outName == "" {
-		outName = "_output"
+	if *txtFlag {
+		//	If text flag set, interpret as text file
+		fo, _ := os.Create(outName + ".txt")
+		fmt.Println("\n" + string(data[:totalSize]) + "\n")
+		fo.WriteString(string(data[:totalSize]))
+		fo.Close()
+	} else {
+		if *jpgFlag {
+			fo, _ := os.Create(outName + ".jpg")
+			img, _, err := image.Decode(bytes.NewReader(data[:totalSize]))
+			if err != nil {
+				fmt.Println(len(data))
+				log.Fatalln(err)
+			}
+			var opts jpeg.Options
+			opts.Quality = 1
+			jpeg.Encode(fo, img, &opts)
+			fo.Close()
+		} else if *pngFlag {
+			fo, _ := os.Create(outName + ".png")
+			img, _, _ := image.Decode(bytes.NewReader(data))
+
+			png.Encode(fo, img)
+			fo.Close()
+		} else {
+			//	Otherwise, interpret as binary
+			fo, _ := os.Create(outName)
+			fo.Write(data)
+			fo.Close()
+		}
 	}
+}
 
+func getSeed(outName string, seed *[16]byte) {
 	if *seedFlag != "" {
 		file, err := os.ReadFile(*seedFlag)
 		if err != nil {
 			gameOver(err)
 		}
-		copy(seed[:], file[:])
+		copy(seed[0:], file[0:])
 	} else {
 		possible := outName + ".lseed"
 
@@ -116,6 +160,11 @@ func taskMaster(filename string) {
 				rand.Read(seed[0:])
 				fo, _ := os.Create(possible)
 				fo.Write(seed[0:])
+				fmt.Println(totalSize)
+				size := [8]byte{}
+				binary.LittleEndian.PutUint64(size[0:], uint64(totalSize))
+				fo.Write(size[0:])
+
 				fo.Close()
 			} else {
 				delayedPrint("Missing key and nonce parameters for decryption.\n", ErrColor, textDelay, periodDelay)
@@ -126,19 +175,22 @@ func taskMaster(filename string) {
 			if err != nil {
 				gameOver(err)
 			}
-			copy(seed[0:], file[0:])
+			copy(seed[0:], file[0:16])
+			ogSize := binary.LittleEndian.Uint64(file[16:])
+			fmt.Println(ogSize)
+			totalSize = int(ogSize)
 		}
 	}
+}
 
+func getNonce(outName string, nonce *[12]byte) {
 	if *nonceFlag != "" {
 		file, err := os.ReadFile(*nonceFlag)
 		if err != nil {
 			gameOver(err)
 		}
-		copy(nonce[:], file[:])
+		copy(nonce[0:], file[0:])
 	} else {
-		//	Equivalent logic for above but for nonces
-
 		possible := outName + ".lnonce"
 
 		if *decFlag {
@@ -163,12 +215,40 @@ func taskMaster(filename string) {
 			copy(nonce[0:], file[0:])
 		}
 	}
+}
 
-	//	Bad file?
+func taskMaster(filename string) {
+	seed := [16]byte{}
+	nonce := [12]byte{}
+
+	// 	Get output file name
+	outName := *outFlag
+	if outName == "" {
+		outName = "_output"
+	}
+
+	//	Check if bad file and set output unit for CLI
 	file, err := os.ReadFile(filename)
 	if err != nil {
 		gameOver(err)
 	}
+	totalSize = len(file)
+
+	if totalSize > 1000 {
+		unit = "KB"
+		unitSize = 1000
+	}
+	if totalSize > 1000000 {
+		unit = "MB"
+		unitSize = 1000000
+	}
+	if totalSize > 1000000000 {
+		unit = "GB"
+		unitSize = 1000000000
+	}
+
+	getSeed(outName, &seed)
+	getNonce(outName, &nonce)
 
 	//	VALIDATION OVER
 	// 	Initialize and perform requested operation
@@ -186,27 +266,7 @@ func taskMaster(filename string) {
 	} else {
 		plaintext := lilith.Decrypt(file)
 
-		last := len(plaintext) - 1
-		for last > 0 {
-			if plaintext[last] == 0 {
-				last -= 1
-				continue
-			}
-			break
-		}
-
-		if *txtFlag {
-			//	If text flag set, interpret as text file
-			fo, _ := os.Create(outName)
-			fmt.Println("\n" + string(plaintext[:last+1]) + "\n")
-			fo.WriteString(string(plaintext[:last+1]))
-			fo.Close()
-		} else {
-			//	Otherwise, interpret as binary
-			fo, _ := os.Create(outName)
-			fo.Write(plaintext)
-			fo.Close()
-		}
+		saveDecrypted(outName, plaintext)
 	}
 
 	delayedPrint("Output written to "+outName+".\n\n", InfoColor, textDelay, periodDelay)

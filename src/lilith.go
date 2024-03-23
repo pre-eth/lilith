@@ -115,10 +115,10 @@ func (l *Lilith) Encrypt(file_bytes []byte) []byte {
 		nextState(&cbytes, &l.ctr, &l.phi)
 		extractKeystream(&l.key, &cbytes)
 		i += 16
-		spinner()
+		spinner(i)
 	}
 
-	fmt.Print(" \033[1D\033[m\n\n")
+	fmt.Print("\033[1D\033[m\n\n")
 
 	delayedPrint("Completed encryption.\n", OkColor, textDelay, periodDelay)
 
@@ -137,10 +137,10 @@ func (l *Lilith) Decrypt(file_bytes []byte) []byte {
 		nextState(&cbytes, &l.ctr, &l.phi)
 		extractKeystream(&l.key, &cbytes)
 		i += 16
-		spinner()
+		spinner(i)
 	}
 
-	fmt.Print(" \033[1D\033[m\n\n")
+	fmt.Print("\033[1D\033[m\n\n")
 
 	delayedPrint("Completed decryption.\n", OkColor, textDelay, periodDelay)
 

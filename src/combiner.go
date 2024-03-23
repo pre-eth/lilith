@@ -126,17 +126,19 @@ func dynamicFold(key *[8]uint32, ptext []byte, operation bool) {
 	}
 
 	end := rotX + (rotY << 1)
-	tmp := end - start
-	if operation {
-		if tmp == 1 || tmp == -1 {
-			tmp = 3
-		} else if tmp == 3 || tmp == -3 {
-			tmp = 1
-		}
+	var tmp int
+	if end > start {
+		tmp = end - start
+	} else {
+		tmp = start - end
 	}
 
-	if tmp < 0 {
-		tmp *= -1
+	if operation && tmp&1 == 1 {
+		if tmp == 1 {
+			tmp = 3
+		} else if tmp == 3 {
+			tmp = 1
+		}
 	}
 
 	switch tmp & 3 {

@@ -93,23 +93,23 @@ func (l *Lilith) Init(seed *[16]byte, nonce *[12]byte, operation bool, first_byt
 }
 
 func (l *Lilith) Encrypt(file_bytes []byte) []byte {
-	delayedPrint("LILITH "+VERSION_STRING+" - ENCRYPT ", TITLE_COLOR, 20, false)
+	delayedPrint("LILITH "+VersionString+" - ENCRYPT ", TitleColor, textDelay, false)
 
 	// 	Logic depends on bytes of 16 blocks, so process leftover blocks differently
 	//	Extend the output buffer, pad with 0s as needed
-	ctext_len := len(file_bytes)
-	leftovers := ctext_len & 15
-	cutoff := ctext_len
-	ctext_len += 16 - leftovers
+	ctextLen := len(file_bytes)
+	leftovers := ctextLen & 15
+	cutoff := ctextLen
+	ctextLen += 16 - leftovers
 
-	for cutoff < ctext_len {
+	for cutoff < ctextLen {
 		file_bytes = append(file_bytes, 0)
 		cutoff += 1
 	}
 
 	i := 0
 	cbytes := [8]uint32{}
-	for i < ctext_len {
+	for i < ctextLen {
 		combiner(&l.key, file_bytes[i:i+16], &l.sbox)
 		bytesToU32(&cbytes, file_bytes[i:i+16])
 		nextState(&cbytes, &l.ctr, &l.phi)
@@ -120,18 +120,18 @@ func (l *Lilith) Encrypt(file_bytes []byte) []byte {
 
 	fmt.Print(" \033[1D\033[m\n\n")
 
-	delayedPrint("Completed encryption.\n", OK_COLOR, 20, true)
+	delayedPrint("Completed encryption.\n", OkColor, textDelay, periodDelay)
 
 	return file_bytes
 }
 
 func (l *Lilith) Decrypt(file_bytes []byte) []byte {
-	delayedPrint("LILITH "+VERSION_STRING+" - DECRYPT ", TITLE_COLOR, 20, false)
+	delayedPrint("LILITH "+VersionString+" - DECRYPT ", TitleColor, textDelay, false)
 
 	i := 0
-	ptext_len := len(file_bytes)
+	ptextLen := len(file_bytes)
 	cbytes := [8]uint32{}
-	for i < ptext_len {
+	for i < ptextLen {
 		bytesToU32(&cbytes, file_bytes[i:i+16])
 		invCombiner(&l.key, file_bytes[i:i+16], &l.sbox)
 		nextState(&cbytes, &l.ctr, &l.phi)
@@ -142,7 +142,7 @@ func (l *Lilith) Decrypt(file_bytes []byte) []byte {
 
 	fmt.Print(" \033[1D\033[m\n\n")
 
-	delayedPrint("Completed decryption.\n", OK_COLOR, 20, true)
+	delayedPrint("Completed decryption.\n", OkColor, textDelay, periodDelay)
 
 	return file_bytes
 }

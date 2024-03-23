@@ -111,21 +111,21 @@ d. 	Dynamic Folding Transformation: In this transformation a complex rotation
 	For a clearer depiction, see img/DYNAMIC_FOLD.png
 */
 func dynamicFold(key *[8]uint32, ptext []byte, operation bool) {
-	rot_x := dynamicIdx(key, 0, 1)
-	rot_y := dynamicIdx(key, 2, 1)
-	pos_x := dynamicIdx(key, 4, 3)
-	pos_y := dynamicIdx(key, 6, 3)
+	rotX := dynamicIdx(key, 0, 1)
+	rotY := dynamicIdx(key, 2, 1)
+	posX := dynamicIdx(key, 4, 3)
+	posY := dynamicIdx(key, 6, 3)
 
 	start := 0
-	if pos_x >= 2 {
+	if posX >= 2 {
 		start += 1
 	}
 
-	if pos_y <= 2 {
+	if posY <= 2 {
 		start += 2
 	}
 
-	end := rot_x + (rot_y << 1)
+	end := rotX + (rotY << 1)
 	tmp := end - start
 	if operation && tmp&1 != 0 {
 		tmp += 2

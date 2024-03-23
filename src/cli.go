@@ -35,8 +35,6 @@ var (
 	seedFlag              = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
 	nonceFlag             = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
 	txtFlag               = flag.Bool("t", false, "Save decrypted output as a text file")
-	jpgFlag               = flag.Bool("j", false, "Save decrypted output as a JPEG")
-	pngFlag               = flag.Bool("p", false, "Save decrypted output as a PNG")
 	quickFlag             = flag.Bool("q", false, "Quick mode - reduce output FX")
 	textDelay     float32 = 20.0
 	periodDelay           = true
@@ -290,36 +288,68 @@ func ArgParse(argc int, args []string) {
 
 	flag.Parse()
 
-	// Quiet mode?
-	if *quietFlag {
-		textDelay = 0.0
-		periodDelay = false
-	}
-
 	//	Print version?
 	if *versionFlag {
 		fmt.Println(InfoColor + VersionString)
 		os.Exit(0)
 	}
 
-	//	Validate operation
-	if *encFlag && *decFlag {
-		delayedPrint("Only operation may be specified at a time.\n", ErrColor, textDelay, periodDelay)
-		os.Exit(1)
-	} else if !*encFlag && !*decFlag {
-		delayedPrint("Missing or invalid operation.\n", ErrColor, textDelay, periodDelay)
-		os.Exit(1)
-	}
-
 	//	See if input file name provided
 	if *fileFlag == "" {
-		//	No file!
 		delayedPrint("No file provided.\n", ErrColor, textDelay, periodDelay)
 		os.Exit(1)
 	}
 
+	// quick mode?
+	if *quickFlag {
+		textDelay = 0.0
+		periodDelay = false
+	}
+
+	// 	Get output file name
+	outName := *outFlag
+	if outName == "" {
+		outName = "_output"
+	}
+
+	//	Validate inputs
+	check1 := 0
+	if *encFlag {
+		check1 += 1
+	}
+	if *decFlag {
+		check1 += 1
+	}
+	if *passFlag {
+		check1 += 1
+	}
+	check2 := 0
+	if *txtFlag {
+		check2 += 1
+		outName += ".txt"
+	}
+	if *jpgFlag {
+		check2 += 1
+		outName += ".jpg"
+	}
+	if *pngFlag {
+		check2 += 1
+		outName += ".png"
+	}
+
+	if check1 > 1 {
+		delayedPrint("Only one operation may be specified at a time.\n", ErrColor, textDelay, periodDelay)
+		os.Exit(1)
+	} else if !*encFlag && !*decFlag && !*passFlag {
+		delayedPrint("Missing or invalid operation.\n", ErrColor, textDelay, periodDelay)
+		os.Exit(1)
+	} else if check2 > 1 {
+		delayedPrint("Only one output type may be specified at a time.\n", ErrColor, textDelay, periodDelay)
+		os.Exit(1)
+	}
+
 	// Perform the requested operation
-	taskMaster(*fileFlag)
+	taskMaster(outName, *fileFlag)
 }
 
 func gameOver(err error) {

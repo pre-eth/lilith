@@ -2,6 +2,7 @@ package lilith
 
 import (
 	"encoding/binary"
+	"fmt"
 )
 
 type Lilith struct {
@@ -92,7 +93,7 @@ func (l *Lilith) Init(seed *[16]byte, nonce *[12]byte, operation bool, first_byt
 }
 
 func (l *Lilith) Encrypt(file_bytes []byte) []byte {
-	delayedPrint("LILITH "+VERSION_STRING+" - ENCRYPT\n", TITLE_COLOR, 20, false)
+	delayedPrint("LILITH "+VERSION_STRING+" - ENCRYPT ", TITLE_COLOR, 20, false)
 
 	// 	Logic depends on bytes of 16 blocks, so process leftover blocks differently
 	//	Extend the output buffer, pad with 0s as needed
@@ -114,15 +115,18 @@ func (l *Lilith) Encrypt(file_bytes []byte) []byte {
 		nextState(&cbytes, &l.ctr, &l.phi)
 		extractKeystream(&l.key, &cbytes)
 		i += 16
+		spinner()
 	}
 
-	delayedPrint("Completed encryption. Exiting.\n", OK_COLOR, 20, true)
+	fmt.Print(" \033[1D\033[m\n\n")
+
+	delayedPrint("Completed encryption. Exiting.\n\n", OK_COLOR, 20, true)
 
 	return file_bytes
 }
 
 func (l *Lilith) Decrypt(file_bytes []byte) []byte {
-	delayedPrint("LILITH "+VERSION_STRING+" - DECRYPT\n", TITLE_COLOR, 20, false)
+	delayedPrint("LILITH "+VERSION_STRING+" - DECRYPT ", TITLE_COLOR, 20, false)
 
 	i := 0
 	ptext_len := len(file_bytes)
@@ -133,9 +137,12 @@ func (l *Lilith) Decrypt(file_bytes []byte) []byte {
 		nextState(&cbytes, &l.ctr, &l.phi)
 		extractKeystream(&l.key, &cbytes)
 		i += 16
+		spinner()
 	}
 
-	delayedPrint("Completed decryption. Exiting.\n", OK_COLOR, 20, true)
+	fmt.Print(" \033[1D\033[m\n\n")
+
+	delayedPrint("Completed decryption. Exiting.\n\n", OK_COLOR, 20, true)
 
 	return file_bytes
 }

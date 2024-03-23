@@ -35,6 +35,17 @@ var (
 	txtFlag        = flag.Bool("t", false, "Save decrypted output as a text file")
 )
 
+func spinner() {
+	spinnerString := "⣾⣽⣻⢿⡿⣟⣯⣷"
+	fmt.Print(INFO_COLOR)
+	for _, s := range spinnerString {
+		fmt.Printf("%c", s)
+		time.Sleep(time.Duration(20) * time.Millisecond)
+		fmt.Print("\033[1D")
+	}
+	fmt.Print("\033[m")
+}
+
 func delayedEnd() {
 	j := 0
 	for j < 2 {
@@ -67,7 +78,7 @@ func delayedPrint(text string, style string, delay_time float32, delay_end bool)
 		}
 		i += w
 	}
-	fmt.Print("\033[m\n")
+	fmt.Print("\033[m")
 }
 
 func taskMaster(filename string) {
@@ -93,7 +104,7 @@ func taskMaster(filename string) {
 			possible = *fileFlag + ".lseed"
 		}
 
-		// 	Check if a .lnonce file exists with same name as this provided file
+		// 	Check if a .lseed file exists with same name as this provided file
 		//	Lets user avoid specifying init params that retain the default names
 		if _, err := os.Stat(possible); errors.Is(err, os.ErrNotExist) {
 			if !*decFlag {
@@ -102,7 +113,7 @@ func taskMaster(filename string) {
 				fo.Write(seed[0:])
 				fo.Close()
 			} else {
-				delayedPrint("Missing key and nonce parameters for decryption.", ERR_COLOR, 20, true)
+				delayedPrint("Missing key and nonce parameters for decryption.\n", ERR_COLOR, 20, true)
 				os.Exit(1)
 			}
 		} else {
@@ -121,6 +132,8 @@ func taskMaster(filename string) {
 		}
 		copy(nonce[:], file[:])
 	} else {
+		//	Equivalent logic for above but for nonces
+
 		possible := out_name + ".lnonce"
 
 		if *decFlag {
@@ -134,7 +147,7 @@ func taskMaster(filename string) {
 				fo.Write(nonce[0:])
 				fo.Close()
 			} else {
-				delayedPrint("Missing key and nonce parameters for decryption.", ERR_COLOR, 20, true)
+				delayedPrint("Missing key and nonce parameters for decryption.\n", ERR_COLOR, 20, true)
 				os.Exit(1)
 			}
 		} else {
@@ -219,17 +232,17 @@ func ArgParse(argc int, args []string) {
 
 	//	Validate operation
 	if *encFlag && *decFlag {
-		delayedPrint("Only operation may be specified at a time.", ERR_COLOR, 20, true)
+		delayedPrint("Only operation may be specified at a time.\n", ERR_COLOR, 20, true)
 		os.Exit(1)
 	} else if !*encFlag && !*decFlag {
-		delayedPrint("Missing or invalid operation.", ERR_COLOR, 20, true)
+		delayedPrint("Missing or invalid operation.\n", ERR_COLOR, 20, true)
 		os.Exit(1)
 	}
 
 	//	See if input file name provided
 	if *fileFlag == "" {
 		//	No file!
-		delayedPrint("No file provided.", ERR_COLOR, 20, true)
+		delayedPrint("No file provided.\n", ERR_COLOR, 20, true)
 		os.Exit(1)
 	}
 
@@ -238,5 +251,5 @@ func ArgParse(argc int, args []string) {
 }
 
 func gameOver(err error) {
-	panic(string(ERR_COLOR) + err.Error() + "\033[m")
+	panic(string(ERR_COLOR) + err.Error() + "\033[m\n")
 }

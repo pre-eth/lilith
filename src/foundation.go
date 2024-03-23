@@ -190,7 +190,7 @@ func generateC0(ctext *[16]byte, key *[8]uint32, sbox *[256]byte) {
 
 	// Write 16 bytes from P0 macro to use as initial plain_text
 	// Start at 5 to never write more than 16 bytes in one go
-	idx := 4 + int(key[7]&15)
+	idx := 5 + int(key[7]&15)
 	startPtext := P0[idx:]
 	startPtext = append(startPtext, P0[:16-(21-idx)]...)
 	combiner(key, startPtext, sbox)

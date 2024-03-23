@@ -35,7 +35,7 @@ var (
 	seedFlag              = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
 	nonceFlag             = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
 	txtFlag               = flag.Bool("t", false, "Save decrypted output as a text file")
-	quickFlag             = flag.Bool("q", false, "Quick mode - reduce output FX")
+	quickFlag             = flag.Bool("q", false, "Quick mode - reduce interface FX")
 	textDelay     float32 = 20.0
 	periodDelay           = true
 	unit                  = "B"
@@ -215,35 +215,34 @@ func taskMaster(outName string, filename string) {
 	lilith := Lilith{}
 	lilith.Init(&seed, &nonce, *decFlag, inputData[0])
 
-	result := []byte{}
-
 	if *encFlag || *passFlag {
 		delayedPrint("\nLILITH "+VersionString+" - ENCRYPT ", TitleColor, textDelay, false)
 
-		result = lilith.Encrypt(inputData)
+		inputData = lilith.Encrypt(inputData)
 
 		fmt.Print("\033[1D\033[m\n\n")
 		delayedPrint("Completed encryption.\n", OkColor, textDelay, periodDelay)
 
 		//	Save encrypted output
 		outputFile, _ := os.Create(outName)
-		outputFile.Write(result)
+		outputFile.Write(inputData)
 		outputFile.Close()
+	}
+
+	//	Reinitialize system for round trip
+	if *passFlag {
+		lilith.Init(&seed, &nonce, true, inputData[0])
 	}
 
 	if *decFlag || *passFlag {
 		delayedPrint("\nLILITH "+VersionString+" - DECRYPT ", TitleColor, textDelay, false)
 
-		if *passFlag {
-			inputData = result
-		}
-
-		result = lilith.Decrypt(inputData)
+		lilith.Decrypt(inputData)
 
 		fmt.Print("\033[1D\033[m\n\n")
 		delayedPrint("Completed decryption.\n", OkColor, textDelay, periodDelay)
 
-		saveDecrypted(outName, result)
+		saveDecrypted(outName, inputData)
 	}
 
 	delayedPrint("Output written to "+outName+".\n", InfoColor, textDelay, periodDelay)

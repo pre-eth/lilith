@@ -120,7 +120,7 @@ func (l *Lilith) Encrypt(file_bytes []byte) []byte {
 
 	fmt.Print(" \033[1D\033[m\n\n")
 
-	delayedPrint("Completed encryption. Exiting.\n\n", OK_COLOR, 20, true)
+	delayedPrint("Completed encryption.\n", OK_COLOR, 20, true)
 
 	return file_bytes
 }
@@ -142,7 +142,7 @@ func (l *Lilith) Decrypt(file_bytes []byte) []byte {
 
 	fmt.Print(" \033[1D\033[m\n\n")
 
-	delayedPrint("Completed decryption. Exiting.\n\n", OK_COLOR, 20, true)
+	delayedPrint("Completed decryption.\n", OK_COLOR, 20, true)
 
 	return file_bytes
 }

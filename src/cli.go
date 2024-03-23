@@ -165,6 +165,9 @@ func taskMaster(filename string) {
 		gameOver(err)
 	}
 
+	//	VALIDATION OVER
+	// 	Initialize and perform requested operation
+
 	lilith := Lilith{}
 	lilith.Init(&seed, &nonce, *decFlag, file[0])
 
@@ -189,7 +192,7 @@ func taskMaster(filename string) {
 
 		if *txtFlag {
 			//	If text flag set, interpret as text file
-			fo, _ := os.Create(out_name + ".txt")
+			fo, _ := os.Create(out_name)
 			fmt.Println(string(plaintext[:last+1]))
 			fo.WriteString(string(plaintext[:last+1]))
 			fo.Close()
@@ -200,6 +203,8 @@ func taskMaster(filename string) {
 			fo.Close()
 		}
 	}
+
+	delayedPrint("Output written to "+out_name+".\n\n", INFO_COLOR, 20, true)
 }
 
 func ArgParse(argc int, args []string) {

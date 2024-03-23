@@ -50,4 +50,4 @@ go build
 
 ## Using In Your Project
 
-`go get github.com/pre-eth/lilith@1.0.0`
+`go get github.com/pre-eth/lilith@v1.0.0`

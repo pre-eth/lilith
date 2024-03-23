@@ -24,15 +24,18 @@ const (
 )
 
 var (
-	VersionString = fmt.Sprintf("%d.%d.%d", MAJOR, MINOR, PATCH)
-	encFlag       = flag.Bool("e", false, "Encrypt the provided file.")
-	decFlag       = flag.Bool("d", false, "Decrypt the provided file.")
-	versionFlag   = flag.Bool("v", false, "Version of this software ("+VersionString+")")
-	fileFlag      = flag.String("f", "", "File name where input is read from")
-	outFlag       = flag.String("o", "", "File name where output is written to.")
-	seedFlag      = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
-	nonceFlag     = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
-	txtFlag       = flag.Bool("t", false, "Save decrypted output as a text file")
+	VersionString         = fmt.Sprintf("%d.%d.%d", MAJOR, MINOR, PATCH)
+	encFlag               = flag.Bool("e", false, "Encrypt the provided file.")
+	decFlag               = flag.Bool("d", false, "Decrypt the provided file.")
+	versionFlag           = flag.Bool("v", false, "Version of this software ("+VersionString+")")
+	fileFlag              = flag.String("f", "", "File name where input is read from")
+	outFlag               = flag.String("o", "", "File name where output is written to.")
+	seedFlag              = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
+	nonceFlag             = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
+	txtFlag               = flag.Bool("t", false, "Save decrypted output as a text file")
+	quietFlag             = flag.Bool("q", false, "Less verbose and interactive output")
+	textDelay     float32 = 20.0
+	periodDelay           = true
 )
 
 // CLI spinner while performing operation
@@ -115,7 +118,7 @@ func taskMaster(filename string) {
 				fo.Write(seed[0:])
 				fo.Close()
 			} else {
-				delayedPrint("Missing key and nonce parameters for decryption.\n", ErrColor, 20, true)
+				delayedPrint("Missing key and nonce parameters for decryption.\n", ErrColor, textDelay, periodDelay)
 				os.Exit(1)
 			}
 		} else {
@@ -149,7 +152,7 @@ func taskMaster(filename string) {
 				fo.Write(nonce[0:])
 				fo.Close()
 			} else {
-				delayedPrint("Missing key and nonce parameters for decryption.\n", ErrColor, 20, true)
+				delayedPrint("Missing key and nonce parameters for decryption.\n", ErrColor, textDelay, periodDelay)
 				os.Exit(1)
 			}
 		} else {
@@ -206,7 +209,7 @@ func taskMaster(filename string) {
 		}
 	}
 
-	delayedPrint("Output written to "+outName+".\n\n", InfoColor, 20, true)
+	delayedPrint("Output written to "+outName+".\n\n", InfoColor, textDelay, periodDelay)
 }
 
 func ArgParse(argc int, args []string) {
@@ -231,6 +234,12 @@ func ArgParse(argc int, args []string) {
 
 	flag.Parse()
 
+	// Quiet mode?
+	if *quietFlag {
+		textDelay = 0.0
+		periodDelay = false
+	}
+
 	//	Print version?
 	if *versionFlag {
 		fmt.Println(InfoColor + VersionString)
@@ -239,17 +248,17 @@ func ArgParse(argc int, args []string) {
 
 	//	Validate operation
 	if *encFlag && *decFlag {
-		delayedPrint("Only operation may be specified at a time.\n", ErrColor, 20, true)
+		delayedPrint("Only operation may be specified at a time.\n", ErrColor, textDelay, periodDelay)
 		os.Exit(1)
 	} else if !*encFlag && !*decFlag {
-		delayedPrint("Missing or invalid operation.\n", ErrColor, 20, true)
+		delayedPrint("Missing or invalid operation.\n", ErrColor, textDelay, periodDelay)
 		os.Exit(1)
 	}
 
 	//	See if input file name provided
 	if *fileFlag == "" {
 		//	No file!
-		delayedPrint("No file provided.\n", ErrColor, 20, true)
+		delayedPrint("No file provided.\n", ErrColor, textDelay, periodDelay)
 		os.Exit(1)
 	}
 

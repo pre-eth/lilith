@@ -14,30 +14,31 @@ import (
 )
 
 const (
-	MAJOR       = 0
-	MINOR       = 5
-	PATCH       = 0
-	ERR_COLOR   = "\033[1;38;2;255;17;0m"
-	INFO_COLOR  = "\033[1;38;2;50;237;215m"
-	OK_COLOR    = "\033[1;38;2;100;207;112m"
-	TITLE_COLOR = "\033[1;38;2;165;97;255m"
+	MAJOR      = 0
+	MINOR      = 5
+	PATCH      = 0
+	ErrColor   = "\033[1;38;2;255;17;0m"
+	InfoColor  = "\033[1;38;2;50;237;215m"
+	OkColor    = "\033[1;38;2;100;207;112m"
+	TitleColor = "\033[1;38;2;165;97;255m"
 )
 
 var (
-	VERSION_STRING = fmt.Sprintf("%d.%d.%d", MAJOR, MINOR, PATCH)
-	encFlag        = flag.Bool("e", false, "Encrypt the provided file.")
-	decFlag        = flag.Bool("d", false, "Decrypt the provided file.")
-	versionFlag    = flag.Bool("v", false, "Version of this software ("+VERSION_STRING+")")
-	fileFlag       = flag.String("f", "", "File name where input is read from")
-	outFlag        = flag.String("o", "", "File name where output is written to.")
-	seedFlag       = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
-	nonceFlag      = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
-	txtFlag        = flag.Bool("t", false, "Save decrypted output as a text file")
+	VersionString = fmt.Sprintf("%d.%d.%d", MAJOR, MINOR, PATCH)
+	encFlag       = flag.Bool("e", false, "Encrypt the provided file.")
+	decFlag       = flag.Bool("d", false, "Decrypt the provided file.")
+	versionFlag   = flag.Bool("v", false, "Version of this software ("+VersionString+")")
+	fileFlag      = flag.String("f", "", "File name where input is read from")
+	outFlag       = flag.String("o", "", "File name where output is written to.")
+	seedFlag      = flag.String("s", "", "File name containing 128-bit seed. Must be a binary file.")
+	nonceFlag     = flag.String("n", "", "File name containing 96-bit nonce. Must be a binary file.")
+	txtFlag       = flag.Bool("t", false, "Save decrypted output as a text file")
 )
 
+// CLI spinner while performing operation
 func spinner() {
 	spinnerString := "⣾⣽⣻⢿⡿⣟⣯⣷"
-	fmt.Print(INFO_COLOR)
+	fmt.Print(InfoColor)
 	for _, s := range spinnerString {
 		fmt.Printf("%c", s)
 		time.Sleep(time.Duration(20) * time.Millisecond)
@@ -46,6 +47,7 @@ func spinner() {
 	fmt.Print("\033[m")
 }
 
+// Period blink animation
 func delayedEnd() {
 	j := 0
 	for j < 2 {
@@ -86,9 +88,9 @@ func taskMaster(filename string) {
 	nonce := [12]byte{}
 
 	// 	Get output file name
-	out_name := *outFlag
-	if out_name == "" {
-		out_name = "_output"
+	outName := *outFlag
+	if outName == "" {
+		outName = "_output"
 	}
 
 	if *seedFlag != "" {
@@ -98,7 +100,7 @@ func taskMaster(filename string) {
 		}
 		copy(seed[:], file[:])
 	} else {
-		possible := out_name + ".lseed"
+		possible := outName + ".lseed"
 
 		if *decFlag {
 			possible = *fileFlag + ".lseed"
@@ -113,7 +115,7 @@ func taskMaster(filename string) {
 				fo.Write(seed[0:])
 				fo.Close()
 			} else {
-				delayedPrint("Missing key and nonce parameters for decryption.\n", ERR_COLOR, 20, true)
+				delayedPrint("Missing key and nonce parameters for decryption.\n", ErrColor, 20, true)
 				os.Exit(1)
 			}
 		} else {
@@ -121,7 +123,7 @@ func taskMaster(filename string) {
 			if err != nil {
 				gameOver(err)
 			}
-			copy(seed[0:], file[:])
+			copy(seed[0:], file[0:])
 		}
 	}
 
@@ -134,7 +136,7 @@ func taskMaster(filename string) {
 	} else {
 		//	Equivalent logic for above but for nonces
 
-		possible := out_name + ".lnonce"
+		possible := outName + ".lnonce"
 
 		if *decFlag {
 			possible = *fileFlag + ".lnonce"
@@ -147,7 +149,7 @@ func taskMaster(filename string) {
 				fo.Write(nonce[0:])
 				fo.Close()
 			} else {
-				delayedPrint("Missing key and nonce parameters for decryption.\n", ERR_COLOR, 20, true)
+				delayedPrint("Missing key and nonce parameters for decryption.\n", ErrColor, 20, true)
 				os.Exit(1)
 			}
 		} else {
@@ -155,7 +157,7 @@ func taskMaster(filename string) {
 			if err != nil {
 				gameOver(err)
 			}
-			copy(nonce[0:], file[:])
+			copy(nonce[0:], file[0:])
 		}
 	}
 
@@ -175,7 +177,7 @@ func taskMaster(filename string) {
 		ciphertext := lilith.Encrypt(file)
 
 		//	Save encrypted output
-		fo, _ := os.Create(out_name)
+		fo, _ := os.Create(outName)
 		fo.Write(ciphertext)
 		fo.Close()
 	} else {
@@ -192,19 +194,19 @@ func taskMaster(filename string) {
 
 		if *txtFlag {
 			//	If text flag set, interpret as text file
-			fo, _ := os.Create(out_name)
+			fo, _ := os.Create(outName)
 			fmt.Println(string(plaintext[:last+1]))
 			fo.WriteString(string(plaintext[:last+1]))
 			fo.Close()
 		} else {
 			//	Otherwise, interpret as binary
-			fo, _ := os.Create(out_name)
+			fo, _ := os.Create(outName)
 			fo.Write(plaintext)
 			fo.Close()
 		}
 	}
 
-	delayedPrint("Output written to "+out_name+".\n\n", INFO_COLOR, 20, true)
+	delayedPrint("Output written to "+outName+".\n\n", InfoColor, 20, true)
 }
 
 func ArgParse(argc int, args []string) {
@@ -229,25 +231,25 @@ func ArgParse(argc int, args []string) {
 
 	flag.Parse()
 
-	//	Print version
+	//	Print version?
 	if *versionFlag {
-		fmt.Println(INFO_COLOR + VERSION_STRING)
+		fmt.Println(InfoColor + VersionString)
 		os.Exit(0)
 	}
 
 	//	Validate operation
 	if *encFlag && *decFlag {
-		delayedPrint("Only operation may be specified at a time.\n", ERR_COLOR, 20, true)
+		delayedPrint("Only operation may be specified at a time.\n", ErrColor, 20, true)
 		os.Exit(1)
 	} else if !*encFlag && !*decFlag {
-		delayedPrint("Missing or invalid operation.\n", ERR_COLOR, 20, true)
+		delayedPrint("Missing or invalid operation.\n", ErrColor, 20, true)
 		os.Exit(1)
 	}
 
 	//	See if input file name provided
 	if *fileFlag == "" {
 		//	No file!
-		delayedPrint("No file provided.\n", ERR_COLOR, 20, true)
+		delayedPrint("No file provided.\n", ErrColor, 20, true)
 		os.Exit(1)
 	}
 
@@ -256,5 +258,5 @@ func ArgParse(argc int, args []string) {
 }
 
 func gameOver(err error) {
-	panic(string(ERR_COLOR) + err.Error() + "\033[m\n")
+	panic(string(ErrColor) + err.Error() + "\033[m\n")
 }

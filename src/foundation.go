@@ -1,7 +1,7 @@
 package lilith
 
 const (
-	U32_MAX = 1 << 32
+	U32Max = 1 << 32
 
 	// 	Following constants are used in the counter system to obtain the next counter
 	// 	for use with the next_state()
@@ -55,7 +55,7 @@ func phi(ctr uint32, a uint32, cc *byte) uint32 {
 	// 	phi() determines the value of the counter carry bit used in ctr_system()
 	// 	For original function that gives counter carry bit, see img/COUNTER_CARRY.png
 	var sum uint64 = uint64(ctr + a + uint32(*cc))
-	if sum >= U32_MAX {
+	if sum >= U32Max {
 		*cc = 1
 	} else {
 		*cc = 0
@@ -65,14 +65,14 @@ func phi(ctr uint32, a uint32, cc *byte) uint32 {
 
 func ctrSystem(ctr *[8]uint32, _phi *byte) {
 	// 	The counter dynamics defined in Section 2.5, which you can also find in img/COUNTER_SYSTEM.png
-	ctr[0] = (ctr[0] + A0 + phi(ctr[0], A0, _phi)) & (U32_MAX - 1)
-	ctr[1] = (ctr[1] + A1 + phi(ctr[1], A1, _phi)) & (U32_MAX - 1)
-	ctr[2] = (ctr[2] + A2 + phi(ctr[2], A2, _phi)) & (U32_MAX - 1)
-	ctr[3] = (ctr[3] + A3 + phi(ctr[3], A3, _phi)) & (U32_MAX - 1)
-	ctr[4] = (ctr[4] + A4 + phi(ctr[4], A4, _phi)) & (U32_MAX - 1)
-	ctr[5] = (ctr[5] + A5 + phi(ctr[5], A5, _phi)) & (U32_MAX - 1)
-	ctr[6] = (ctr[6] + A6 + phi(ctr[6], A6, _phi)) & (U32_MAX - 1)
-	ctr[7] = (ctr[7] + A7 + phi(ctr[7], A7, _phi)) & (U32_MAX - 1)
+	ctr[0] = (ctr[0] + A0 + phi(ctr[0], A0, _phi)) & (U32Max - 1)
+	ctr[1] = (ctr[1] + A1 + phi(ctr[1], A1, _phi)) & (U32Max - 1)
+	ctr[2] = (ctr[2] + A2 + phi(ctr[2], A2, _phi)) & (U32Max - 1)
+	ctr[3] = (ctr[3] + A3 + phi(ctr[3], A3, _phi)) & (U32Max - 1)
+	ctr[4] = (ctr[4] + A4 + phi(ctr[4], A4, _phi)) & (U32Max - 1)
+	ctr[5] = (ctr[5] + A5 + phi(ctr[5], A5, _phi)) & (U32Max - 1)
+	ctr[6] = (ctr[6] + A6 + phi(ctr[6], A6, _phi)) & (U32Max - 1)
+	ctr[7] = (ctr[7] + A7 + phi(ctr[7], A7, _phi)) & (U32Max - 1)
 }
 
 func gFunction(state *[8]uint32, ctr *[8]uint32, gfn *[8]uint32) {
@@ -82,7 +82,7 @@ func gFunction(state *[8]uint32, ctr *[8]uint32, gfn *[8]uint32) {
 	for i < 8 {
 		tmp = uint64(state[i] + ctr[i])
 		tmp *= tmp
-		gfn[i] = uint32((tmp ^ (tmp >> 32)) & (U32_MAX - 1))
+		gfn[i] = uint32((tmp ^ (tmp >> 32)) & (U32Max - 1))
 		i += 1
 	}
 }
@@ -191,44 +191,44 @@ func generateC0(ctext *[16]byte, key *[8]uint32, sbox *[256]byte) {
 	// Write 16 bytes from P0 macro to use as initial plain_text
 	// Start at 5 to never write more than 16 bytes in one go
 	idx := 4 + int(key[7]&15)
-	start_ptext := P0[idx:]
-	start_ptext = append(start_ptext, P0[:16-(21-idx)]...)
-	combiner(key, start_ptext, sbox)
-	copy(ctext[:], start_ptext[:16])
+	startPtext := P0[idx:]
+	startPtext = append(startPtext, P0[:16-(21-idx)]...)
+	combiner(key, startPtext, sbox)
+	copy(ctext[:], startPtext[:16])
 }
 
 func generateSbox(sbox *[256]byte, nonce *[3]uint32, operation bool) [256]byte {
-	key_bytes := [4]byte{sboxMix(nonce[0]), sboxMix(nonce[1]), sboxMix(nonce[2])}
-	key_bytes[3] = byte(nonce[0]>>24) ^ byte(nonce[1]>>24) ^ byte(nonce[2]>>24)
+	keyBytes := [4]byte{sboxMix(nonce[0]), sboxMix(nonce[1]), sboxMix(nonce[2])}
+	keyBytes[3] = byte(nonce[0]>>24) ^ byte(nonce[1]>>24) ^ byte(nonce[2]>>24)
 
-	new_sbox := [256]byte{}
+	newSbox := [256]byte{}
 
 	var i uint16 = 0
 	for i < 256 {
-		new_sbox[i] = srboxLookup(byte(i), sbox, &key_bytes)
+		newSbox[i] = srboxLookup(byte(i), sbox, &keyBytes)
 		i += 1
 	}
 
 	//	Need to create INVERSE S-box for decryption
 	if operation {
-		sbox_idx := [256]byte{}
+		idxSbox := [256]byte{}
 
 		i = 0
 		for i < 256 {
-			old := new_sbox[i]
+			old := newSbox[i]
 			row := old & 15
 			col := (old >> 4) & 15
 			idx := (col << 4) + row
-			idx = new_sbox[idx]
+			idx = newSbox[idx]
 			row = idx & 15
 			col = (idx >> 4) & 15
 			idx = (col << 4) + row
-			sbox_idx[idx] = old
+			idxSbox[idx] = old
 			i += 1
 		}
 
-		new_sbox = sbox_idx
+		newSbox = idxSbox
 	}
 
-	return new_sbox
+	return newSbox
 }

@@ -26,6 +26,7 @@ const (
 	InfoColor  = "\033[1;38;2;50;237;215m"
 	OkColor    = "\033[1;38;2;100;207;112m"
 	TitleColor = "\033[1;38;2;165;97;255m"
+	Spinner    = "⣾⣽⣻⢿⡿⣟⣯⣷"
 )
 
 var (
@@ -50,14 +51,9 @@ var (
 
 // CLI spinner while performing operation
 func spinner(written int) {
-	// spinnerString := "⣾⣽⣻⢿⡿⣟⣯⣷"
-	// fmt.Print(InfoColor)
-	// for _, s := range spinnerString {
-	// 	fmt.Printf("%c", s)
-	// 	time.Sleep(time.Duration(20) * time.Millisecond)
-	// 	fmt.Print("\033[1D")
-	// }
-
+	idx := ((written >> 4) & 7) * 3
+	r, _ := utf8.DecodeRuneInString(Spinner[idx:])
+	fmt.Printf("%s%c\033[m\033[1D", InfoColor, r)
 	if written > totalSize {
 		written -= (written - totalSize)
 	}
@@ -227,17 +223,17 @@ func taskMaster(filename string) {
 
 	totalSize = len(inputData)
 
-	if totalSize > 1000 {
+	if totalSize > 2000 {
 		unit = "KB"
 		unitSize = 1000
 	}
-	if totalSize > 1000000 {
+	if totalSize > 2000000 {
 		unit = "MB"
 		unitSize = 1000000
 	}
-	if totalSize > 1000000000 {
+	if totalSize > 2000000000 {
 		unit = "GB"
-		unitSize = 1000000000
+		unitSize = 100000000
 	}
 
 	getSeed(outName, &seed)
@@ -250,14 +246,25 @@ func taskMaster(filename string) {
 	lilith.Init(&seed, &nonce, *decFlag, inputData[0])
 
 	if *encFlag {
+		delayedPrint("LILITH "+VersionString+" - ENCRYPT ", TitleColor, textDelay, false)
+
 		ciphertext := lilith.Encrypt(inputData)
+
+		fmt.Print("\033[1D\033[m\n\n")
+		delayedPrint("Completed encryption.\n", OkColor, textDelay, periodDelay)
 
 		//	Save encrypted output
 		fo, _ := os.Create(outName)
 		fo.Write(ciphertext)
 		fo.Close()
+
 	} else {
+		delayedPrint("LILITH "+VersionString+" - DECRYPT ", TitleColor, textDelay, false)
+
 		plaintext := lilith.Decrypt(inputData)
+
+		fmt.Print("\033[1D\033[m\n\n")
+		delayedPrint("Completed decryption.\n", OkColor, textDelay, periodDelay)
 
 		saveDecrypted(outName, plaintext)
 	}

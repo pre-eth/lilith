@@ -94,36 +94,19 @@ func delayedPrint(text string, style string, delay_time float32, delay_end bool)
 
 func saveDecrypted(outName string, data []byte) {
 	data = data[:totalSize]
-	if *txtFlag {
-		//	If text flag set, interpret as text file
-		fo, _ := os.Create(outName + ".txt")
-		fmt.Println("\n" + string(data) + "\n")
-		fo.WriteString(string(data))
-		fo.Close()
-	} else {
-		if *jpgFlag {
-			fo, _ := os.Create(outName + ".jpg")
-			img, _, err := image.Decode(bytes.NewReader(data))
-			if err != nil {
-				fmt.Println(len(data))
-				log.Fatalln(err)
-			}
-			var opts jpeg.Options
-			opts.Quality = 100
-			jpeg.Encode(fo, img, &opts)
-			fo.Close()
-		} else if *pngFlag {
-			fo, _ := os.Create(outName + ".png")
-			img, _, _ := image.Decode(bytes.NewReader(data))
 
-			png.Encode(fo, img)
-			fo.Close()
-		} else {
-			//	Otherwise, interpret as binary
-			fo, _ := os.Create(outName)
-			fo.Write(data)
-			fo.Close()
-		}
+	outFile, err := os.Create(outName)
+	if err != nil {
+		gameOver(err)
+	}
+	defer outFile.Close()
+
+	if strings.HasSuffix(outName, ".txt") {
+		//	If text flag set, interpret as text file
+		fmt.Println("\n" + string(data) + "\n")
+		outFile.WriteString(string(data))
+	} else {
+		outFile.Write(data)
 	}
 }
 
@@ -199,15 +182,9 @@ func getNonce(outName string, nonce *[12]byte) {
 	}
 }
 
-func taskMaster(filename string) {
+func taskMaster(outName string, filename string) {
 	seed := [16]byte{}
 	nonce := [12]byte{}
-
-	// 	Get output file name
-	outName := *outFlag
-	if outName == "" {
-		outName = "_output"
-	}
 
 	//	Check if bad file and set output unit for CLI
 	inputData, err := os.ReadFile(filename)
@@ -235,35 +212,41 @@ func taskMaster(filename string) {
 
 	//	VALIDATION OVER
 	// 	Initialize and perform requested operation
-
 	lilith := Lilith{}
 	lilith.Init(&seed, &nonce, *decFlag, inputData[0])
 
-	if *encFlag {
-		delayedPrint("LILITH "+VersionString+" - ENCRYPT ", TitleColor, textDelay, false)
+	result := []byte{}
 
-		ciphertext := lilith.Encrypt(inputData)
+	if *encFlag || *passFlag {
+		delayedPrint("\nLILITH "+VersionString+" - ENCRYPT ", TitleColor, textDelay, false)
+
+		result = lilith.Encrypt(inputData)
 
 		fmt.Print("\033[1D\033[m\n\n")
 		delayedPrint("Completed encryption.\n", OkColor, textDelay, periodDelay)
 
 		//	Save encrypted output
-		fo, _ := os.Create(outName)
-		fo.Write(ciphertext)
-		fo.Close()
+		outputFile, _ := os.Create(outName)
+		outputFile.Write(result)
+		outputFile.Close()
+	}
 
-	} else {
-		delayedPrint("LILITH "+VersionString+" - DECRYPT ", TitleColor, textDelay, false)
+	if *decFlag || *passFlag {
+		delayedPrint("\nLILITH "+VersionString+" - DECRYPT ", TitleColor, textDelay, false)
 
-		plaintext := lilith.Decrypt(inputData)
+		if *passFlag {
+			inputData = result
+		}
+
+		result = lilith.Decrypt(inputData)
 
 		fmt.Print("\033[1D\033[m\n\n")
 		delayedPrint("Completed decryption.\n", OkColor, textDelay, periodDelay)
 
-		saveDecrypted(outName, plaintext)
+		saveDecrypted(outName, result)
 	}
 
-	delayedPrint("Output written to "+outName+".\n\n", InfoColor, textDelay, periodDelay)
+	delayedPrint("Output written to "+outName+".\n", InfoColor, textDelay, periodDelay)
 }
 
 func ArgParse(argc int, args []string) {
@@ -311,6 +294,9 @@ func ArgParse(argc int, args []string) {
 	if outName == "" {
 		outName = "_output"
 	}
+	if *txtFlag {
+		outName += ".txt"
+	}
 
 	//	Validate inputs
 	check1 := 0
@@ -323,28 +309,12 @@ func ArgParse(argc int, args []string) {
 	if *passFlag {
 		check1 += 1
 	}
-	check2 := 0
-	if *txtFlag {
-		check2 += 1
-		outName += ".txt"
-	}
-	if *jpgFlag {
-		check2 += 1
-		outName += ".jpg"
-	}
-	if *pngFlag {
-		check2 += 1
-		outName += ".png"
-	}
 
 	if check1 > 1 {
 		delayedPrint("Only one operation may be specified at a time.\n", ErrColor, textDelay, periodDelay)
 		os.Exit(1)
 	} else if !*encFlag && !*decFlag && !*passFlag {
 		delayedPrint("Missing or invalid operation.\n", ErrColor, textDelay, periodDelay)
-		os.Exit(1)
-	} else if check2 > 1 {
-		delayedPrint("Only one output type may be specified at a time.\n", ErrColor, textDelay, periodDelay)
 		os.Exit(1)
 	}
 

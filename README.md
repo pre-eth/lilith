@@ -15,7 +15,7 @@ v1.0.0
 
 LILITH is a stream cipher written in pure Go. It implements the algorithm described in the paper [Kashmar, Dr & Ismail, Eddie Shahril. (2017). Blostream: A high speed stream cipher. Journal of Engineering Science and Technology. 12. 1111-1128](https://www.researchgate.net/publication/316942854_Blostream_A_high_speed_stream_cipher).
 
-## INSTALLATION
+## Installation
 
 You'll need [Go](https://go.dev/) to build this cipher.
 
@@ -26,7 +26,7 @@ go build
 ./lilith -h
 ```
 
-## COMMAND LINE
+## Command Line
 
 ```
                                            [OPTIONS]
@@ -47,3 +47,7 @@ go build
   -t	Save decrypted output as a text file
   -v	Version of this software (0.5.0)
 ```
+
+## Using In Your Project
+
+`go get github.com/pre-eth/lilith@1.0.0`

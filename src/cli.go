@@ -131,8 +131,6 @@ func getSeed(outName string, seed *[16]byte) {
 				rand.Read(seed[0:])
 				fo, _ := os.Create(possible)
 				fo.Write(seed[0:])
-				fmt.Println(totalSize)
-
 				fo.Close()
 			} else {
 				delayedPrint("Missing key and nonce parameters for decryption.\n", ErrColor, textDelay, periodDelay)

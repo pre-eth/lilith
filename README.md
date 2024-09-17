@@ -13,6 +13,8 @@ v1.0.0
 <b>Use at your own risk</b>. Criticism and suggestions are welcome.
 </pre>         
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/pre-eth/lilith)](https://goreportcard.com/report/github.com/pre-eth/lilith) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 LILITH is a stream cipher written in pure Go. It implements the algorithm described in the paper [Kashmar, Dr & Ismail, Eddie Shahril. (2017). Blostream: A high speed stream cipher. Journal of Engineering Science and Technology. 12. 1111-1128](https://www.researchgate.net/publication/316942854_Blostream_A_high_speed_stream_cipher).
 
 ## Installation

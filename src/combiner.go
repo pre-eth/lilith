@@ -17,13 +17,13 @@ import (
 a. 	Add Round Keystream Transformation: The keystream generated from the
 
 	PRNG is used byte by byte, from lowest to highest index, so there is no need
-	for keystream array to be in a 2-dimentional form; just use them up and
+	for keystream array to be in a 2-dimensional form; just use them up and
 	move on. The function Add Round Keystream uses 16 bytes of expanded key every
 	time it is called. The operation of the inverse Add Round Keystream
 	transformation is simply applied by performing the same forward transformation
 	since Add Round Keystream is its own inverse.
 
-	NOTE: The parameter ptext will be refered to as the "state" from now on
+	NOTE: The parameter ptext will be referred to as the "state" from now on
 */
 func addRoundKs(key *[8]uint32, ptext []byte) {
 	ptext[0] ^= byte(key[0])
@@ -56,8 +56,8 @@ b. 	Byte Substitution Transformation: The Sub Byte transformation is a non-linea
 */
 func byteSubstitution(sbox *[256]byte, ptext []byte) {
 	i := 0
-	var row byte = 0
-	var col byte = 0
+	var row byte
+	var col byte
 	for i < 16 {
 		row = ptext[i] & 15
 		col = (ptext[i] >> 4) & 15
